@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Lookgo</string>
+    <string name="not_all_permissions_granted">"Yay! Thanks for letting me access your approximate location.
+        But you know what would be great? If you allow me to know where you exactly are. Thank you!</string>
+    <string name="both_permissions_denied">"Getting your exact location is important for this app. Please grant us fine location. Thank you :D</string>
+    <string name="never_again">The app won\'t work without GPS</string>
+    <string name="all_permissions_granted">Thanks! I can access your exact location :D</string>
+    <string name="button_allow_precise_location">Allow precise location</string>
+    <string name="button_request_permissions">Request permissions</string>
+    <string name="button_first_time">First Time</string>
+    <string name="button_second_time">Second Time</string>
+</resources>
