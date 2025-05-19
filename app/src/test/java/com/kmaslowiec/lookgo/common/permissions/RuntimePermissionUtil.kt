@@ -2,65 +2,65 @@ package com.kmaslowiec.lookgo.common.permissions
 
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
-import com.kmaslowiec.lookgo.main.permissions.getRuntimePermissionRequestState
 import com.kmaslowiec.lookgo.main.permissions.states.LocationPermissionState
+import com.kmaslowiec.lookgo.main.permissions.toRuntimePermissionRequestState
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalPermissionsApi::class)
-class RuntimePermissionHelperKtTest {
+class RuntimePermissionUtilTest {
 
     @Test
     fun `returns AllGranted when all permissions are granted`() {
-        val mockPermissionsState = mockk<MultiplePermissionsState> {
+        val permissionsState = mockk<MultiplePermissionsState> {
             every { allPermissionsGranted } returns true
         }
 
-        val result = getRuntimePermissionRequestState(mockPermissionsState)
+        val tested = permissionsState.toRuntimePermissionRequestState()
 
-        assertEquals(LocationPermissionState.AllGranted, result)
+        assertEquals(LocationPermissionState.AllGranted, tested)
     }
 
     @Test
     fun `returns NotAllGranted when some but not all permissions are granted`() {
-        val mockPermissionsState = mockk<MultiplePermissionsState> {
+        val permissionsState = mockk<MultiplePermissionsState> {
             every { allPermissionsGranted } returns false
             every { permissions.size } returns 2
             every { revokedPermissions.size } returns 1
         }
 
-        val result = getRuntimePermissionRequestState(mockPermissionsState)
+        val tested = permissionsState.toRuntimePermissionRequestState()
 
-        assertEquals(LocationPermissionState.NotAllGranted, result)
+        assertEquals(LocationPermissionState.NotAllGranted, tested)
     }
 
     @Test
     fun `returns BothDenied when all permissions are revoked and shouldShowRationale is true`() {
-        val mockPermissionsState = mockk<MultiplePermissionsState> {
+        val permissionsState = mockk<MultiplePermissionsState> {
             every { allPermissionsGranted } returns false
             every { permissions.size } returns 2
             every { revokedPermissions.size } returns 2
             every { shouldShowRationale } returns true
         }
 
-        val result = getRuntimePermissionRequestState(mockPermissionsState)
+        val tested = permissionsState.toRuntimePermissionRequestState()
 
-        assertEquals(LocationPermissionState.BothDenied, result)
+        assertEquals(LocationPermissionState.BothDenied, tested)
     }
 
     @Test
     fun `returns FirstTimeAndNeverAgain when all permissions are revoked and shouldShowRationale is false`() {
-        val mockPermissionsState = mockk<MultiplePermissionsState> {
+        val permissionsState = mockk<MultiplePermissionsState> {
             every { allPermissionsGranted } returns false
             every { permissions.size } returns 2
             every { revokedPermissions.size } returns 2
             every { shouldShowRationale } returns false
         }
 
-        val result = getRuntimePermissionRequestState(mockPermissionsState)
+        val tested = permissionsState.toRuntimePermissionRequestState()
 
-        assertEquals(LocationPermissionState.FirstTimeAndNeverAgain, result)
+        assertEquals(LocationPermissionState.FirstTimeAndNeverAgain, tested)
     }
 }
