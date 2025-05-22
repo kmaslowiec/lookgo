@@ -1,152 +1,129 @@
 package com.kmaslowiec.lookgo.main.view
 
+import android.Manifest
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.kmaslowiec.lookgo.R
-import com.kmaslowiec.lookgo.main.permissions.getRuntimePermissionRequestState
-import com.kmaslowiec.lookgo.main.permissions.states.LocationPermissionState
+import com.kmaslowiec.lookgo.common.utils.goToApplicationSettings
+import com.kmaslowiec.lookgo.location.view.LocationDisplay
+import com.kmaslowiec.lookgo.location.view.NoLocationDisplay
+import com.kmaslowiec.lookgo.location.view.RequestLocationRuntimePermission
+import com.kmaslowiec.lookgo.location.viewmodel.LocationViewModel
 import com.kmaslowiec.lookgo.main.viewmodel.MainScreenViewModel
+import com.kmaslowiec.lookgo.permissions.states.PermissionState
+import com.kmaslowiec.lookgo.permissions.toRuntimePermissionRequestState
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MainScreen(
     modifier: Modifier,
-    viewModel: MainScreenViewModel = hiltViewModel()
+    viewModel: MainScreenViewModel = hiltViewModel(),
+    locationViewModel: LocationViewModel = hiltViewModel()
 ) {
     val isFirstTime by viewModel.isFirstTime.collectAsState(false)
     val locationPermissionsState = rememberMultiplePermissionsState(
         listOf(
-            android.Manifest.permission.ACCESS_COARSE_LOCATION,
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION,
         )
     )
-
+    val location = locationViewModel.locationState.observeAsState()
+    var isDialogVisible by remember { mutableStateOf(true) }
+    val locationPermissionsStateResult = locationPermissionsState.toRuntimePermissionRequestState()
+    val context = LocalContext.current
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        RequestPermissionButtonAndText(getRuntimePermissionRequestState(locationPermissionsState)) {
+        HandleLocationPermissions(
+            locationPermissionsStateResult = locationPermissionsStateResult,
+            isFirstTime = isFirstTime,
+            location = location.value,
+            locationViewModel = locationViewModel,
+            context = context,
+            isDialogVisible = isDialogVisible
+        ) {
             locationPermissionsState.launchMultiplePermissionRequest()
+            viewModel.firstTimeAccess()
         }
-        CircleButton(
-            onClick = { viewModel.firstTimeAccess() },
-            isFirstTime = isFirstTime
-        )
-    }
-}
-
-@Composable
-fun CircleButton(
-    onClick: () -> Unit,
-    isFirstTime: Boolean
-) {
-    Button(
-        modifier = Modifier
-            .size(200.dp)
-            .clip(CircleShape),
-        onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isFirstTime) Color.Green else Color.Red
-        )
-    ) {
-        Text(
-            text = if (isFirstTime) stringResource(R.string.button_first_time) else stringResource(R.string.button_second_time),
-            fontSize = 20.sp,
-            color = Color.White
-        )
-    }
-}
-
-@Composable
-fun RequestPermissionButtonAndText(
-    state: LocationPermissionState,
-    onClick: () -> Unit
-) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = when (state) {
-                LocationPermissionState.NotAllGranted -> stringResource(R.string.not_all_permissions_granted)
-                LocationPermissionState.BothDenied -> stringResource(R.string.both_permissions_denied)
-                LocationPermissionState.FirstTimeAndNeverAgain -> stringResource(R.string.never_again)
-                LocationPermissionState.AllGranted -> stringResource(R.string.all_permissions_granted)
+        DisposableEffect(Unit) {
+            onDispose {
+                locationViewModel.stopLocationUpdates()
             }
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = onClick) {
-            Text(
-                stringResource(
-                    if (state == LocationPermissionState.NotAllGranted) {
-                        R.string.button_allow_precise_location
-                    } else {
-                        R.string.button_request_permissions
-                    }
-                )
+        }
+    }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+private fun HandleLocationPermissions(
+    locationPermissionsStateResult: PermissionState,
+    isFirstTime: Boolean,
+    location: Pair<Double, Double>?,
+    locationViewModel: LocationViewModel,
+    context: Context,
+    isDialogVisible: Boolean,
+    firstAndBothDeniedAction: () -> Unit
+) {
+    when {
+        locationPermissionsStateResult == PermissionState.AllGranted -> {
+            RunAndShowLocation(
+                location = location,
+                locationViewModel = locationViewModel
+            )
+        }
+
+        locationPermissionsStateResult == PermissionState.FirstTimeOrNeverAgain && !isFirstTime -> {
+            NoLocationDisplay {
+                context.goToApplicationSettings()
+            }
+        }
+
+        else -> {
+            RequestLocationRuntimePermission(
+                isDialogVisible = isDialogVisible,
+                locationPermissionsState = locationPermissionsStateResult,
+                isFirstTime = isFirstTime,
+                firstAndBothDeniedAction = {
+                    firstAndBothDeniedAction()
+                }
             )
         }
     }
 }
 
-@Preview(
-    showBackground = true,
-    name = "Permission first time and never again"
-)
 @Composable
-fun RequestPermissionButtonAndTextFirstTimeAndNeverAgainPreview() {
-    RequestPermissionButtonAndText(LocationPermissionState.FirstTimeAndNeverAgain, {})
-}
-
-@Preview(
-    showBackground = true,
-    name = "Permission not all granted"
-)
-@Composable
-fun RequestPermissionButtonAndTextNotAllGrantedPreview() {
-    RequestPermissionButtonAndText(LocationPermissionState.NotAllGranted, {})
-}
-
-@Preview(
-    showBackground = true,
-    name = "First Time Access"
-)
-@Composable
-fun CircleButtonFirstTimePreview() {
-    CircleButton(
-        isFirstTime = true,
-        onClick = {}
+fun RunAndShowLocation(
+    location: Pair<Double?, Double?>?,
+    locationViewModel: LocationViewModel
+) {
+    LaunchedEffect(Unit) {
+        locationViewModel.startLocationUpdates()
+    }
+    LocationDisplay(
+        latitude = location?.first ?: 0.0,
+        longitude = location?.second ?: 0.0
     )
 }
 
-@Preview(
-    showBackground = true,
-    name = "Second Time Access"
-)
-@Composable
-fun CircleButtonSecondTimePreview() {
-    CircleButton(
-        isFirstTime = false,
-        onClick = {}
-    )
-}
+
+
+
+

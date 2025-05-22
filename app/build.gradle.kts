@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -49,10 +51,12 @@ dependencies {
 
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.google.hilt.android)
+    implementation(libs.gms.play.services.location.v2101)
     ksp(libs.google.hilt.ksp.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
