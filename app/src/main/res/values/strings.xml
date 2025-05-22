@@ -1,12 +1,10 @@
 <resources>
     <string name="app_name">Lookgo</string>
-    <string name="not_all_permissions_granted">"Yay! Thanks for letting me access your approximate location.
-        But you know what would be great? If you allow me to know where you exactly are. Thank you!</string>
-    <string name="both_permissions_denied">"Getting your exact location is important for this app. Please grant us fine location. Thank you :D</string>
-    <string name="never_again">The app won\'t work without GPS</string>
-    <string name="all_permissions_granted">Thanks! I can access your exact location :D</string>
-    <string name="button_allow_precise_location">Allow precise location</string>
-    <string name="button_request_permissions">Request permissions</string>
-    <string name="button_first_time">First Time</string>
-    <string name="button_second_time">Second Time</string>
+    <string name="location_permission_first_attempt_title">We need your location</string>
+    <string name="location_permission_first_attempt_content">To show you the nearest bus stops and their schedules, we need access to your location while you\'re using the app.\n\nWithout it, the app is useless.</string>
+    <string name="location_permission_second_attempt_title">We really need your location</string>
+    <string name="location_permission_second_attempt_content">Without location access, the app can’t do its main job – quickly and conveniently showing you the nearest bus stop and its schedule. We kindly ask you to allow access to the location</string>
+    <string name="no_location_content">The app cannot work without the location. If you wish to use the app please allow the location in the settings using the button below</string>
+    <string name="button_ok">OK</string>
+    <string name="button_location">Location</string>
 </resources>

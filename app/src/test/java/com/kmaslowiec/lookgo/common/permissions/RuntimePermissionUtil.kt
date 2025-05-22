@@ -2,8 +2,8 @@ package com.kmaslowiec.lookgo.common.permissions
 
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
-import com.kmaslowiec.lookgo.main.permissions.states.LocationPermissionState
-import com.kmaslowiec.lookgo.main.permissions.toRuntimePermissionRequestState
+import com.kmaslowiec.lookgo.permissions.states.PermissionState
+import com.kmaslowiec.lookgo.permissions.toRuntimePermissionRequestState
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -20,7 +20,7 @@ class RuntimePermissionUtilTest {
 
         val tested = permissionsState.toRuntimePermissionRequestState()
 
-        assertEquals(LocationPermissionState.AllGranted, tested)
+        assertEquals(PermissionState.AllGranted, tested)
     }
 
     @Test
@@ -33,7 +33,7 @@ class RuntimePermissionUtilTest {
 
         val tested = permissionsState.toRuntimePermissionRequestState()
 
-        assertEquals(LocationPermissionState.NotAllGranted, tested)
+        assertEquals(PermissionState.NotAllGranted, tested)
     }
 
     @Test
@@ -47,7 +47,7 @@ class RuntimePermissionUtilTest {
 
         val tested = permissionsState.toRuntimePermissionRequestState()
 
-        assertEquals(LocationPermissionState.BothDenied, tested)
+        assertEquals(PermissionState.BothDenied, tested)
     }
 
     @Test
@@ -61,6 +61,6 @@ class RuntimePermissionUtilTest {
 
         val tested = permissionsState.toRuntimePermissionRequestState()
 
-        assertEquals(LocationPermissionState.FirstTimeAndNeverAgain, tested)
+        assertEquals(PermissionState.FirstTimeOrNeverAgain, tested)
     }
 }
