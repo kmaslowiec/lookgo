@@ -1,0 +1,21 @@
+package com.kmaslowiec.lookgo.stops.repository
+
+import android.util.Log
+import com.kmaslowiec.lookgo.api.ApiService
+import com.kmaslowiec.lookgo.stops.model.Stops
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import javax.inject.Inject
+
+class StopRepository @Inject constructor(private val api: ApiService) {
+
+    fun getStops(): Flow<Stops> = flow {
+        try {
+            emit(api.getStops())
+        } catch (e: Exception) {
+            Log.e("Connection error", "${e.message}")
+        }
+    }.flowOn(Dispatchers.IO)
+}
