@@ -8,7 +8,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainScreenViewModel @Inject constructor(private val preferencesRepository: AppPreferencesRepository) : ViewModel() {
+class MainScreenViewModel @Inject constructor(
+    private val preferencesRepository: AppPreferencesRepository,
+) : ViewModel() {
 
     val isFirstTime = preferencesRepository.isFirstTime
 

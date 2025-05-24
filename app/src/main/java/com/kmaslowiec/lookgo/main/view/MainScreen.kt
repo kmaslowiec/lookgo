@@ -122,8 +122,3 @@ fun RunAndShowLocation(
         longitude = location?.second ?: 0.0
     )
 }
-
-
-
-
-
