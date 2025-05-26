@@ -1,4 +1,4 @@
-package com.kmaslowiec.lookgo.common.di
+package com.kmaslowiec.lookgo.common.di.preferences
 
 import android.content.Context
 import androidx.datastore.core.DataStore

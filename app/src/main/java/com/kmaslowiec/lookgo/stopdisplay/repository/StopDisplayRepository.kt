@@ -1,9 +1,8 @@
 package com.kmaslowiec.lookgo.stopdisplay.repository
 
-import com.kmaslowiec.lookgo.api.ApiService
-import javax.inject.Inject
+import com.kmaslowiec.lookgo.stopdisplay.model.StopDisplay
 
-class StopDisplayRepository @Inject constructor(private val api: ApiService) {
+interface StopDisplayRepository {
 
-    suspend fun getStopDisplay(stopNumber: String) = api.getStopDisplay(stopNumber)
+    suspend fun getStopDisplay(stopNumber: String): StopDisplay
 }
