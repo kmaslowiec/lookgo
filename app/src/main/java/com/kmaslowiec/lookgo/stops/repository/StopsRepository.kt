@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
-class StopRepository @Inject constructor(private val api: ApiService) {
+class StopsRepository @Inject constructor(private val api: ApiService) {
 
     fun getStops(): Flow<Stops> = flow {
         try {
