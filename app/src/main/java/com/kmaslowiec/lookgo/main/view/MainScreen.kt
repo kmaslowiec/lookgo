@@ -5,22 +5,28 @@ import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.kmaslowiec.lookgo.common.utils.goToApplicationSettings
+import com.kmaslowiec.lookgo.location.model.LocationCoordinates
 import com.kmaslowiec.lookgo.location.view.LocationDisplay
 import com.kmaslowiec.lookgo.location.view.NoLocationDisplay
 import com.kmaslowiec.lookgo.location.view.RequestLocationRuntimePermission
@@ -28,40 +34,43 @@ import com.kmaslowiec.lookgo.location.viewmodel.LocationViewModel
 import com.kmaslowiec.lookgo.main.viewmodel.MainScreenViewModel
 import com.kmaslowiec.lookgo.permissions.states.PermissionState
 import com.kmaslowiec.lookgo.permissions.toRuntimePermissionRequestState
+import com.kmaslowiec.lookgo.stops.model.Stop
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MainScreen(
     modifier: Modifier,
-    viewModel: MainScreenViewModel = hiltViewModel(),
+    mainScreenViewModel: MainScreenViewModel = hiltViewModel(),
     locationViewModel: LocationViewModel = hiltViewModel()
 ) {
-    val isFirstTime by viewModel.isFirstTime.collectAsState(false)
+    val context = LocalContext.current
     val locationPermissionsState = rememberMultiplePermissionsState(
         listOf(
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
         )
     )
-    val location = locationViewModel.locationState.observeAsState()
-    var isDialogVisible by remember { mutableStateOf(true) }
-    val locationPermissionsStateResult = locationPermissionsState.toRuntimePermissionRequestState()
-    val context = LocalContext.current
+    val isFirstTime by mainScreenViewModel.isFirstTime.collectAsState(false)
+    val locationCoordinates by locationViewModel.currentLocation.collectAsState()
+    val nearBusStops by locationViewModel.nearBusStops.collectAsState()
+    val isDialogVisible by remember { mutableStateOf(true) }
+    locationViewModel.getNearBusStops()
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         HandleLocationPermissions(
-            locationPermissionsStateResult = locationPermissionsStateResult,
+            locationPermissionsStateResult = locationPermissionsState.toRuntimePermissionRequestState(),
             isFirstTime = isFirstTime,
-            location = location.value,
+            location = locationCoordinates,
             locationViewModel = locationViewModel,
             context = context,
-            isDialogVisible = isDialogVisible
+            isDialogVisible = isDialogVisible,
+            stops = nearBusStops
         ) {
             locationPermissionsState.launchMultiplePermissionRequest()
-            viewModel.firstTimeAccess()
+            mainScreenViewModel.firstTimeAccess()
         }
         DisposableEffect(Unit) {
             onDispose {
@@ -76,18 +85,20 @@ fun MainScreen(
 private fun HandleLocationPermissions(
     locationPermissionsStateResult: PermissionState,
     isFirstTime: Boolean,
-    location: Pair<Double, Double>?,
+    location: LocationCoordinates,
     locationViewModel: LocationViewModel,
     context: Context,
     isDialogVisible: Boolean,
-    firstAndBothDeniedAction: () -> Unit
+    stops: List<Stop>,
+    firstAndBothDeniedAction: () -> Unit,
 ) {
     when {
         locationPermissionsStateResult == PermissionState.AllGranted -> {
-            RunAndShowLocation(
+            LaunchAndDisplayCurrentLocation(
                 location = location,
                 locationViewModel = locationViewModel
             )
+            ShowNamesOfNearBusStops(stops)
         }
 
         locationPermissionsStateResult == PermissionState.FirstTimeOrNeverAgain && !isFirstTime -> {
@@ -110,15 +121,30 @@ private fun HandleLocationPermissions(
 }
 
 @Composable
-fun RunAndShowLocation(
-    location: Pair<Double?, Double?>?,
+fun LaunchAndDisplayCurrentLocation(
+    location: LocationCoordinates,
     locationViewModel: LocationViewModel
 ) {
     LaunchedEffect(Unit) {
         locationViewModel.startLocationUpdates()
     }
     LocationDisplay(
-        latitude = location?.first ?: 0.0,
-        longitude = location?.second ?: 0.0
+        latitude = location.latitude,
+        longitude = location.longitude
     )
+}
+
+@Composable
+fun ShowNamesOfNearBusStops(stops: List<Stop>) {
+    LazyColumn {
+        items(stops) { stop ->
+            Text(
+                text = stop.name,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
+            HorizontalDivider()
+        }
+    }
 }
