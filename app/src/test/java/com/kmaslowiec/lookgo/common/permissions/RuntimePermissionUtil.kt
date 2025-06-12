@@ -18,7 +18,7 @@ class RuntimePermissionUtilTest {
             every { allPermissionsGranted } returns true
         }
 
-        val tested = permissionsState.toRuntimePermissionRequestState()
+        val tested = permissionsState.toRuntimePermissionRequestState(false)
 
         assertEquals(PermissionState.AllGranted, tested)
     }
@@ -31,7 +31,7 @@ class RuntimePermissionUtilTest {
             every { revokedPermissions.size } returns 1
         }
 
-        val tested = permissionsState.toRuntimePermissionRequestState()
+        val tested = permissionsState.toRuntimePermissionRequestState(false)
 
         assertEquals(PermissionState.NotAllGranted, tested)
     }
@@ -45,13 +45,13 @@ class RuntimePermissionUtilTest {
             every { shouldShowRationale } returns true
         }
 
-        val tested = permissionsState.toRuntimePermissionRequestState()
+        val tested = permissionsState.toRuntimePermissionRequestState(false)
 
         assertEquals(PermissionState.BothDenied, tested)
     }
 
     @Test
-    fun `returns FirstTimeAndNeverAgain when all permissions are revoked and shouldShowRationale is false`() {
+    fun `returns FirstTime when all permissions are revoked and shouldShowRationale is false`() {
         val permissionsState = mockk<MultiplePermissionsState> {
             every { allPermissionsGranted } returns false
             every { permissions.size } returns 2
@@ -59,8 +59,22 @@ class RuntimePermissionUtilTest {
             every { shouldShowRationale } returns false
         }
 
-        val tested = permissionsState.toRuntimePermissionRequestState()
+        val tested = permissionsState.toRuntimePermissionRequestState(true)
 
-        assertEquals(PermissionState.FirstTimeOrNeverAgain, tested)
+        assertEquals(PermissionState.FirstTime, tested)
+    }
+
+    @Test
+    fun `returns NeverAgain when all permissions are revoked and it is not first time`() {
+        val permissionsState = mockk<MultiplePermissionsState> {
+            every { allPermissionsGranted } returns false
+            every { permissions.size } returns 2
+            every { revokedPermissions.size } returns 2
+            every { shouldShowRationale } returns false
+        }
+
+        val tested = permissionsState.toRuntimePermissionRequestState(false)
+
+        assertEquals(PermissionState.NeverAgain, tested)
     }
 }

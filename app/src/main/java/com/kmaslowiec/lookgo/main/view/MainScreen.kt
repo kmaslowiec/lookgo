@@ -1,7 +1,6 @@
 package com.kmaslowiec.lookgo.main.view
 
 import android.Manifest
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,20 +15,20 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.kmaslowiec.lookgo.R
 import com.kmaslowiec.lookgo.common.utils.goToApplicationSettings
+import com.kmaslowiec.lookgo.common.view.SimpleOkDialog
 import com.kmaslowiec.lookgo.location.model.LocationCoordinates
 import com.kmaslowiec.lookgo.location.view.LocationDisplay
 import com.kmaslowiec.lookgo.location.view.NoLocationDisplay
-import com.kmaslowiec.lookgo.location.view.RequestLocationRuntimePermission
 import com.kmaslowiec.lookgo.location.viewmodel.LocationViewModel
 import com.kmaslowiec.lookgo.main.viewmodel.MainScreenViewModel
 import com.kmaslowiec.lookgo.permissions.states.PermissionState
@@ -53,7 +52,6 @@ fun MainScreen(
     val isFirstTime by mainScreenViewModel.isFirstTime.collectAsState(false)
     val locationCoordinates by locationViewModel.currentLocation.collectAsState()
     val nearBusStops by locationViewModel.nearBusStops.collectAsState()
-    val isDialogVisible by remember { mutableStateOf(true) }
     locationViewModel.getNearBusStops()
     Column(
         modifier = modifier.fillMaxSize(),
@@ -61,17 +59,42 @@ fun MainScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         HandleLocationPermissions(
-            locationPermissionsStateResult = locationPermissionsState.toRuntimePermissionRequestState(),
-            isFirstTime = isFirstTime,
-            location = locationCoordinates,
-            locationViewModel = locationViewModel,
-            context = context,
-            isDialogVisible = isDialogVisible,
-            stops = nearBusStops
-        ) {
-            locationPermissionsState.launchMultiplePermissionRequest()
-            mainScreenViewModel.firstTimeAccess()
-        }
+            locationPermissionsStateResult = locationPermissionsState.toRuntimePermissionRequestState(
+                isFirstTime
+            ),
+            allGrantedAction = {
+                LaunchAndDisplayCurrentLocation(
+                    location = locationCoordinates,
+                    locationViewModel = locationViewModel
+                )
+                ShowNamesOfNearBusStops(nearBusStops)
+            },
+            neverAgainAction = {
+                NoLocationDisplay {
+                    context.goToApplicationSettings()
+                }
+            },
+            firstTimeAction = {
+                SimpleOkDialog(
+                    title = stringResource(R.string.location_permission_first_attempt_title),
+                    content = stringResource(
+                        R.string.location_permission_first_attempt_content
+                    ),
+                    onDismiss = {
+                        locationPermissionsState.launchMultiplePermissionRequest()
+                        mainScreenViewModel.firstTimeAccess()
+                    }
+                )
+            },
+            bothDeniedAction = {
+                SimpleOkDialog(
+                    title = stringResource(R.string.location_permission_second_attempt_title),
+                    content =
+                        stringResource(R.string.location_permission_second_attempt_content),
+                    onDismiss = { locationPermissionsState.launchMultiplePermissionRequest() }
+                )
+            },
+        )
         DisposableEffect(Unit) {
             onDispose {
                 locationViewModel.stopLocationUpdates()
@@ -84,39 +107,29 @@ fun MainScreen(
 @Composable
 private fun HandleLocationPermissions(
     locationPermissionsStateResult: PermissionState,
-    isFirstTime: Boolean,
-    location: LocationCoordinates,
-    locationViewModel: LocationViewModel,
-    context: Context,
-    isDialogVisible: Boolean,
-    stops: List<Stop>,
-    firstAndBothDeniedAction: () -> Unit,
+    allGrantedAction: @Composable () -> Unit,
+    neverAgainAction: @Composable () -> Unit,
+    firstTimeAction: @Composable () -> Unit,
+    bothDeniedAction: @Composable () -> Unit,
 ) {
-    when {
-        locationPermissionsStateResult == PermissionState.AllGranted -> {
-            LaunchAndDisplayCurrentLocation(
-                location = location,
-                locationViewModel = locationViewModel
-            )
-            ShowNamesOfNearBusStops(stops)
+    when (locationPermissionsStateResult) {
+        PermissionState.AllGranted -> {
+            allGrantedAction()
         }
 
-        locationPermissionsStateResult == PermissionState.FirstTimeOrNeverAgain && !isFirstTime -> {
-            NoLocationDisplay {
-                context.goToApplicationSettings()
-            }
+        PermissionState.NeverAgain -> {
+            neverAgainAction()
         }
 
-        else -> {
-            RequestLocationRuntimePermission(
-                isDialogVisible = isDialogVisible,
-                locationPermissionsState = locationPermissionsStateResult,
-                isFirstTime = isFirstTime,
-                firstAndBothDeniedAction = {
-                    firstAndBothDeniedAction()
-                }
-            )
+        PermissionState.FirstTime -> {
+            firstTimeAction()
         }
+
+        PermissionState.BothDenied -> {
+            bothDeniedAction()
+        }
+
+        PermissionState.NotAllGranted -> TODO()
     }
 }
 
