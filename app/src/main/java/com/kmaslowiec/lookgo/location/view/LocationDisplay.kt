@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun LocationDisplay(latitude: Double, longitude: Double) {
+fun CurrentLocationDisplay(latitude: Double, longitude: Double) {
     Card(
         modifier = Modifier
             .padding(16.dp)
@@ -47,8 +47,8 @@ fun LocationDisplay(latitude: Double, longitude: Double) {
             AnimatedContent(
                 targetState = latitude,
                 transitionSpec = {
-                    (slideInHorizontally() { height -> height } + fadeIn()).togetherWith(
-                        slideOutHorizontally() { height -> -height } + fadeOut())
+                    (slideInHorizontally { height -> height } + fadeIn()).togetherWith(
+                        slideOutHorizontally { height -> -height } + fadeOut())
                 }
             ) { lat ->
                 Text(
@@ -59,8 +59,8 @@ fun LocationDisplay(latitude: Double, longitude: Double) {
             AnimatedContent(
                 targetState = longitude,
                 transitionSpec = {
-                    (slideInHorizontally() { height -> height } + fadeIn()).togetherWith(
-                        slideOutHorizontally() { height -> -height } + fadeOut())
+                    (slideInHorizontally { height -> height } + fadeIn()).togetherWith(
+                        slideOutHorizontally { height -> -height } + fadeOut())
                 }
             ) { lon ->
                 Text(
@@ -77,7 +77,7 @@ fun LocationDisplay(latitude: Double, longitude: Double) {
 )
 @Composable
 fun LocationDisplayPreview(){
-    LocationDisplay(
+    CurrentLocationDisplay(
         latitude = 12.555,
         longitude = 14.666
     )
