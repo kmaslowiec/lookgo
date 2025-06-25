@@ -2,7 +2,11 @@ package com.kmaslowiec.lookgo.main.domain
 
 import com.kmaslowiec.lookgo.location.model.LocationCoordinates
 import com.kmaslowiec.lookgo.stops.repository.StopsRepository
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.toList
 import javax.inject.Inject
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -13,15 +17,16 @@ class FindNearBusStop @Inject constructor(
     private val stopsRepository: StopsRepository,
 ) {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     suspend operator fun invoke(currentLocation: LocationCoordinates) = stopsRepository.getStops()
-        .first()
-        .data
+        .flatMapConcat { it.data.asFlow() }
         .filter { location ->
             calculateRange(
                 currentLocation,
                 LocationCoordinates(location.latitude, location.longitude)
             ) <= 500.0
-        }
+        }.toList()
+
 
     private fun calculateRange(
         currentLocation: LocationCoordinates,

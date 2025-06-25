@@ -35,7 +35,10 @@ class LocationViewModel @Inject constructor(
         }
     }
 
-    @Suppress("MissingPermission")
+    override fun onCleared() {
+        stopLocationUpdates()
+    }
+
     fun startLocationUpdates() {
         locationManager.startLocationUpdates()
     }
