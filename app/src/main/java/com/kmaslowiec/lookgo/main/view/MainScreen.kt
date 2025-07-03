@@ -33,6 +33,10 @@ import com.kmaslowiec.lookgo.location.model.LocationCoordinates
 import com.kmaslowiec.lookgo.location.view.CurrentLocationDisplay
 import com.kmaslowiec.lookgo.location.view.NoLocationDisplay
 import com.kmaslowiec.lookgo.location.viewmodel.LocationViewModel
+import com.kmaslowiec.lookgo.main.view.uistate.StopsState
+import com.kmaslowiec.lookgo.main.view.uistate.StopsState.Error
+import com.kmaslowiec.lookgo.main.view.uistate.StopsState.Loading
+import com.kmaslowiec.lookgo.main.view.uistate.StopsState.Success
 import com.kmaslowiec.lookgo.main.viewmodel.MainScreenViewModel
 import com.kmaslowiec.lookgo.permissions.state.PermissionState
 import com.kmaslowiec.lookgo.permissions.toRuntimePermissionRequestState
@@ -55,6 +59,7 @@ fun MainScreen(
     )
     val isFirstTimeState by mainScreenViewModel.preferencesState.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
+    val stopsState = locationViewModel.stopsState.collectAsState()
     var isFirstTimeDialogVisible = remember { mutableStateOf(true) }
     var isRationaleDialogVisible = remember { mutableStateOf(true) }
 
@@ -76,6 +81,7 @@ fun MainScreen(
                 currentLocation = currentLocation,
                 isFirstTimeDialogVisible = isFirstTimeDialogVisible.value,
                 isRationaleDialogVisible = isRationaleDialogVisible.value,
+                stopsState = stopsState.value,
                 rationaleDialogAction = {
                     locationPermissionsState.launchMultiplePermissionRequest()
                     isRationaleDialogVisible.value = false
@@ -99,6 +105,7 @@ private fun HandleLocationPermissions(
     mainScreenViewModel: MainScreenViewModel,
     isFirstTimeDialogVisible: Boolean,
     isRationaleDialogVisible: Boolean,
+    stopsState: StopsState<List<Stop>>,
     rationaleDialogAction: () -> Unit,
     firstTimeDialogAction: () -> Unit,
 ) {
@@ -110,7 +117,15 @@ private fun HandleLocationPermissions(
                 latitude = currentLocation.latitude,
                 longitude = currentLocation.longitude
             )
-            NearBusStopsList(locationViewModel.nearBusStops.collectAsState().value)
+            when (stopsState) {
+                is Success<List<Stop>> -> {
+                    NearBusStopsList(stopsState.data)
+                }
+
+                is Error -> {}
+                Loading -> CircularProgressIndicator()
+            }
+
         }
 
         PermissionState.NeverAgain -> {
