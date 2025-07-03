@@ -2,6 +2,7 @@ package com.kmaslowiec.lookgo.main.view
 
 import android.Manifest
 import android.content.Context
+import android.location.Location
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,7 +30,6 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.kmaslowiec.lookgo.R
 import com.kmaslowiec.lookgo.common.utils.goToApplicationSettings
 import com.kmaslowiec.lookgo.common.view.SimpleOkDialog
-import com.kmaslowiec.lookgo.location.model.LocationCoordinates
 import com.kmaslowiec.lookgo.location.view.CurrentLocationDisplay
 import com.kmaslowiec.lookgo.location.view.NoLocationDisplay
 import com.kmaslowiec.lookgo.location.viewmodel.LocationViewModel
@@ -100,7 +100,7 @@ fun MainScreen(
 private fun HandleLocationPermissions(
     context: Context,
     locationPermissionsStateResult: PermissionState,
-    currentLocation: LocationCoordinates,
+    currentLocation: Location,
     locationViewModel: LocationViewModel,
     mainScreenViewModel: MainScreenViewModel,
     isFirstTimeDialogVisible: Boolean,
