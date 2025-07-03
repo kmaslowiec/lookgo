@@ -8,7 +8,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -28,7 +27,7 @@ class MainScreenViewModelTest {
 
     @Test
     fun `preference is loaded successfully `() = runTest {
-        assertTrue(tested.preferencesState.first() is PreferencesState.Success)
+        assertTrue(tested.preferencesState.value is PreferencesState.Success)
     }
 
     @Test

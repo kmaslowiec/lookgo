@@ -14,12 +14,13 @@ class MainScreenViewModel @Inject constructor(
     private val preferencesRepository: AppPreferencesRepository,
 ) : ViewModel() {
 
-    val preferencesState = MutableStateFlow<PreferencesState>(PreferencesState.Loading)
+    private val _preferencesState = MutableStateFlow<PreferencesState>(PreferencesState.Loading)
+    val preferencesState = _preferencesState
 
     init {
         viewModelScope.launch {
             preferencesRepository.isFirstTime.collect {
-                preferencesState.value = PreferencesState.Success(it)
+                _preferencesState.value = PreferencesState.Success(it)
             }
         }
     }

@@ -14,8 +14,8 @@ class StopsRepositoryImpl @Inject constructor(private val api: ApiService) : Sto
     override fun getStops(): Flow<Stops> = flow {
         try {
             emit(api.getStops())
-        } catch (e: Exception) {
-            Log.e("Connection error", "${e.message}")
+        } catch (exception: Exception) {
+            Log.e("Exception", exception.toString())
         }
     }.flowOn(Dispatchers.IO)
 }

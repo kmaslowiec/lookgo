@@ -2,6 +2,7 @@ package com.kmaslowiec.lookgo.main.view
 
 import android.Manifest
 import android.content.Context
+import android.location.Location
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,10 +30,13 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.kmaslowiec.lookgo.R
 import com.kmaslowiec.lookgo.common.utils.goToApplicationSettings
 import com.kmaslowiec.lookgo.common.view.SimpleOkDialog
-import com.kmaslowiec.lookgo.location.model.LocationCoordinates
 import com.kmaslowiec.lookgo.location.view.CurrentLocationDisplay
 import com.kmaslowiec.lookgo.location.view.NoLocationDisplay
 import com.kmaslowiec.lookgo.location.viewmodel.LocationViewModel
+import com.kmaslowiec.lookgo.main.view.uistate.StopsState
+import com.kmaslowiec.lookgo.main.view.uistate.StopsState.Error
+import com.kmaslowiec.lookgo.main.view.uistate.StopsState.Loading
+import com.kmaslowiec.lookgo.main.view.uistate.StopsState.Success
 import com.kmaslowiec.lookgo.main.viewmodel.MainScreenViewModel
 import com.kmaslowiec.lookgo.permissions.state.PermissionState
 import com.kmaslowiec.lookgo.permissions.toRuntimePermissionRequestState
@@ -55,8 +59,9 @@ fun MainScreen(
     )
     val isFirstTimeState by mainScreenViewModel.preferencesState.collectAsState()
     val currentLocation by locationViewModel.currentLocation.collectAsState()
-    var isFirstTimeDialogVisible = remember { mutableStateOf(true) }
-    var isRationaleDialogVisible = remember { mutableStateOf(true) }
+    val stopsState = locationViewModel.stopsState.collectAsState()
+    val isFirstTimeDialogVisible = remember { mutableStateOf(true) }
+    val isRationaleDialogVisible = remember { mutableStateOf(true) }
 
     if (isFirstTimeState is PreferencesState.Loading) {
         CircularProgressIndicator()
@@ -76,6 +81,7 @@ fun MainScreen(
                 currentLocation = currentLocation,
                 isFirstTimeDialogVisible = isFirstTimeDialogVisible.value,
                 isRationaleDialogVisible = isRationaleDialogVisible.value,
+                stopsState = stopsState.value,
                 rationaleDialogAction = {
                     locationPermissionsState.launchMultiplePermissionRequest()
                     isRationaleDialogVisible.value = false
@@ -94,11 +100,12 @@ fun MainScreen(
 private fun HandleLocationPermissions(
     context: Context,
     locationPermissionsStateResult: PermissionState,
-    currentLocation: LocationCoordinates,
+    currentLocation: Location,
     locationViewModel: LocationViewModel,
     mainScreenViewModel: MainScreenViewModel,
     isFirstTimeDialogVisible: Boolean,
     isRationaleDialogVisible: Boolean,
+    stopsState: StopsState,
     rationaleDialogAction: () -> Unit,
     firstTimeDialogAction: () -> Unit,
 ) {
@@ -110,7 +117,15 @@ private fun HandleLocationPermissions(
                 latitude = currentLocation.latitude,
                 longitude = currentLocation.longitude
             )
-            NearBusStopsList(locationViewModel.nearBusStops.collectAsState().value)
+            when (stopsState) {
+                is Success -> {
+                    NearBusStopsList(stopsState.data)
+                }
+
+                is Error -> {}
+                Loading -> CircularProgressIndicator()
+            }
+
         }
 
         PermissionState.NeverAgain -> {
