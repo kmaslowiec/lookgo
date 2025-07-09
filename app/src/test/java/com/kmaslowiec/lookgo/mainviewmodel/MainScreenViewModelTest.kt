@@ -3,6 +3,7 @@ package com.kmaslowiec.lookgo.mainviewmodel
 import com.kmaslowiec.lookgo.CoroutinesUnconfinedDispatcherTestExtension
 import com.kmaslowiec.lookgo.main.viewmodel.MainScreenViewModel
 import com.kmaslowiec.lookgo.preferences.AppPreferencesRepository
+import com.kmaslowiec.lookgo.preferences.state.PreferencesState
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -23,13 +24,15 @@ class MainScreenViewModelTest {
     }
     private val tested: MainScreenViewModel = MainScreenViewModel(preferencesRepository)
 
+    //TODO test for State Loading
+
     @Test
-    fun `test isFirstTime emits correct value`() = runTest {
-        assertTrue(tested.isFirstTime.first())
+    fun `preference is loaded successfully `() = runTest {
+        assertTrue(tested.preferencesState.first() is PreferencesState.Success)
     }
 
     @Test
-    fun `test firstTimeAccess calls repository`() = runTest {
+    fun `firstTimeAccess calls repository`() = runTest {
         tested.firstTimeAccess()
 
         coVerify(exactly = 1) { preferencesRepository.firstTimeAccess() }
