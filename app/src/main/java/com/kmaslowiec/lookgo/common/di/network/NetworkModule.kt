@@ -1,6 +1,7 @@
-package com.kmaslowiec.lookgo.common.di
+package com.kmaslowiec.lookgo.common.di.network
 
 import com.kmaslowiec.lookgo.api.ApiService
+import com.kmaslowiec.lookgo.common.utils.ZDITM_BASE_URL
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,16 +16,14 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl("https://www.zditm.szczecin.pl/api/v1/")
+    fun provideRetrofit(): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(ZDITM_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-    }
 
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService {
-        return retrofit.create(ApiService::class.java)
-    }
+    fun provideApiService(retrofit: Retrofit): ApiService =
+        retrofit.create(ApiService::class.java)
 }

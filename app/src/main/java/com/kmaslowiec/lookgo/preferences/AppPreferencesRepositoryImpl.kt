@@ -18,6 +18,6 @@ class AppPreferencesRepositoryImpl @Inject constructor(private val dataStore: Da
 
     override val isFirstTime: Flow<Boolean> =
         dataStore.data.map { preferences ->
-            preferences[isFirstTimePreferencesKey] ?: true
+            preferences[isFirstTimePreferencesKey] != false
         }
 }
