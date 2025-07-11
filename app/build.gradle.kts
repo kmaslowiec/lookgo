@@ -49,9 +49,9 @@ dependencies {
 
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.google.hilt.android)
-//    implementation(libs.gms.play.services.location.v2101)
     ksp(libs.google.hilt.ksp.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.runtime.livedata)
