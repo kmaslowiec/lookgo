@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.kmaslowiec.lookgo.main.view.MainScreen
+import com.kmaslowiec.lookgo.main.navigation.NavGraph
 import com.kmaslowiec.lookgo.ui.theme.StarterComposeMVVMTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -23,10 +23,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                 ) { innerPadding ->
-                    MainScreen(
+                    NavGraph(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding),
+                            .padding(innerPadding)
                     )
                 }
             }
