@@ -13,6 +13,7 @@ sealed class Screen(val route: String) {
     data object Main : Screen("main")
 }
 
+//test
 @Composable
 fun NavGraph(
     modifier: Modifier = Modifier,
