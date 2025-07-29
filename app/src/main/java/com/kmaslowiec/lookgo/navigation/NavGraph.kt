@@ -8,9 +8,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.kmaslowiec.lookgo.main.view.MainScreen
+import com.kmaslowiec.lookgo.welcome.WelcomePagerScreen
 
 sealed class Screen(val route: String) {
     data object Main : Screen("main")
+    data object Welcome : Screen("welcome")
 }
 
 @Composable
@@ -20,9 +22,12 @@ fun NavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Main.route,
+        startDestination = Screen.Welcome.route,
         modifier = modifier
     ) {
+        composable(Screen.Welcome.route) {
+            WelcomePagerScreen(modifier = Modifier.fillMaxSize())
+        }
         composable(Screen.Main.route) {
             MainScreen(modifier = Modifier.fillMaxSize())
         }
