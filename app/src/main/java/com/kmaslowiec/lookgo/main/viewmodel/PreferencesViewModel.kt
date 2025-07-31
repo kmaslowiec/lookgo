@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainScreenViewModel @Inject constructor(
+class PreferencesViewModel @Inject constructor(
     private val preferencesRepository: AppPreferencesRepository,
 ) : ViewModel() {
 
