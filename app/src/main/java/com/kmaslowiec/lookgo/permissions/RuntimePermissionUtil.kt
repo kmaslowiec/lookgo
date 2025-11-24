@@ -6,7 +6,7 @@ import com.kmaslowiec.lookgo.permissions.state.PermissionState
 
 @OptIn(ExperimentalPermissionsApi::class)
 fun MultiplePermissionsState.toRuntimePermissionRequestState(
-    isFirstTime: Boolean
+    isFirstTime: Boolean = false
 ): PermissionState {
     return when {
         allPermissionsGranted -> PermissionState.AllGranted

@@ -1,13 +1,14 @@
 package com.kmaslowiec.lookgo.mainviewmodel
 
 import com.kmaslowiec.lookgo.CoroutinesUnconfinedDispatcherTestExtension
-import com.kmaslowiec.lookgo.main.viewmodel.MainScreenViewModel
+import com.kmaslowiec.lookgo.main.viewmodel.PreferencesViewModel
 import com.kmaslowiec.lookgo.preferences.AppPreferencesRepository
 import com.kmaslowiec.lookgo.preferences.state.PreferencesState
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -16,14 +17,21 @@ import org.junit.jupiter.api.extension.ExtendWith
 
 @ExperimentalCoroutinesApi
 @ExtendWith(CoroutinesUnconfinedDispatcherTestExtension::class)
-class MainScreenViewModelTest {
+class PreferencesViewModelTest {
 
     private var preferencesRepository: AppPreferencesRepository = mockk(relaxed = true) {
         every { isFirstTime } returns flowOf(true)
     }
-    private val tested: MainScreenViewModel = MainScreenViewModel(preferencesRepository)
+    private val tested: PreferencesViewModel = PreferencesViewModel(preferencesRepository)
 
-    //TODO test for State Loading
+    @Test
+    fun `preference is loading `() = runTest {
+        every { preferencesRepository.isFirstTime } returns emptyFlow()
+
+        val tested = PreferencesViewModel(preferencesRepository)
+
+        assertTrue(tested.preferencesState.value is PreferencesState.Loading)
+    }
 
     @Test
     fun `preference is loaded successfully `() = runTest {

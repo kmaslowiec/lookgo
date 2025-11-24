@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kmaslowiec.lookgo.location.LocationUpdatesManager
 import com.kmaslowiec.lookgo.main.view.uistate.StopsState
+import com.kmaslowiec.lookgo.stops.model.Stop
 import com.kmaslowiec.lookgo.stops.repository.StopsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,17 +21,18 @@ class LocationViewModel @Inject constructor(
     private val repo: StopsRepository
 ) : AndroidViewModel(application) {
 
-    private val _currentLocation =
-        MutableStateFlow<Location>(Location(""))
+    private val _currentLocation = MutableStateFlow(Location(""))
     val currentLocation: StateFlow<Location> = _currentLocation
     private val _stopsState = MutableStateFlow<StopsState>(StopsState.Loading)
     val stopsState: StateFlow<StopsState> = _stopsState
 
-    private val locationManager: LocationUpdatesManager = LocationUpdatesManager(application) { location ->
-        _currentLocation.value = Location("GPS").apply {
-            latitude = location.latitude
-            longitude = location.longitude
+    private val locationManager: LocationUpdatesManager =
+        LocationUpdatesManager(application) { location ->
+            _currentLocation.value = location
         }
+
+    init {
+        startLocationUpdates()
     }
 
     fun getNearBusStops() {
@@ -38,16 +40,24 @@ class LocationViewModel @Inject constructor(
             repo.getStops()
                 .catch { exception -> _stopsState.value = StopsState.Error(exception) }
                 .collect { stopsList ->
-                    val nearbyStops = stopsList.data.filter { stop ->
-                        _currentLocation.value.distanceTo(Location("ZDiTM").apply {
-                            latitude = stop.latitude
-                            longitude = stop.longitude
-                        }) <= 500.0
-                    }
-                    _stopsState.value = StopsState.Success(nearbyStops)
+                    _stopsState.value = StopsState.Success(
+                        stopsList.data
+                            .filter { stop ->
+                                isBusStopNearby(stop)
+                            })
                 }
         }
     }
+
+    private fun isBusStopNearby(stop: Stop): Boolean =
+        _currentLocation.value.distanceTo(
+            Location(
+                _currentLocation.value.provider
+            ).apply {
+                latitude = stop.latitude
+                longitude = stop.longitude
+            }) <= 500.0
+
 
     override fun onCleared() {
         stopLocationUpdates()

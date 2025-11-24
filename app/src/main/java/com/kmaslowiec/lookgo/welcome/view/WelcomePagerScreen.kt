@@ -1,4 +1,4 @@
-package com.kmaslowiec.lookgo.welcome
+package com.kmaslowiec.lookgo.welcome.view
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +26,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 enum class PageBackgroundColor(val color: @Composable () -> Color) {
     ThemePrimary({ MaterialTheme.colorScheme.primary }),
@@ -31,10 +34,28 @@ enum class PageBackgroundColor(val color: @Composable () -> Color) {
     ThemeTertiary({ MaterialTheme.colorScheme.tertiary })
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun WelcomePagerScreen(modifier: Modifier) {
+fun WelcomePagerScreen(
+    modifier: Modifier,
+    onNavigateToLocationPermission: () -> Unit,
+) {
     val pagerState = rememberPagerState(pageCount = { 3 })
 
+    WelcomePager(
+        modifier = modifier,
+        pagerState = pagerState,
+        onNavigateToPermissionsDeclined = onNavigateToLocationPermission,
+    )
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+private fun WelcomePager(
+    modifier: Modifier = Modifier,
+    pagerState: PagerState,
+    onNavigateToPermissionsDeclined: () -> Unit,
+) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.SpaceBetween
@@ -42,7 +63,7 @@ fun WelcomePagerScreen(modifier: Modifier) {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
-                .weight(1f)
+                .weight(1f),
         ) { page ->
             Box(
                 contentAlignment = Alignment.Center,
@@ -50,15 +71,61 @@ fun WelcomePagerScreen(modifier: Modifier) {
                     .fillMaxSize()
                     .background(pageBackgroundColor(page))
             ) {
-                Text(text = "Page ${page + 1}")
+                when (page) {
+                    0 -> WelcomePage1(
+                        modifier
+                    )
+
+                    1 -> WelcomePage2(modifier)
+                    2 -> WelcomePage3(
+                        modifier = modifier,
+                        onNavigateToPermissionsDeclined = onNavigateToPermissionsDeclined,
+                    )
+                }
             }
         }
+
 
         DotsIndicator(
             totalDots = 3,
             selectedIndex = pagerState.currentPage,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            modifier = Modifier.align(Alignment.CenterHorizontally),
         )
+    }
+}
+
+@Composable
+fun WelcomePage1(modifier: Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier,
+    ) {
+        Text("page 1")
+    }
+}
+
+@Composable
+fun WelcomePage2(modifier: Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier,
+    ) {
+        Text("page 2")
+    }
+}
+
+@Composable
+fun WelcomePage3(modifier: Modifier, onNavigateToPermissionsDeclined: () -> Unit) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier,
+    ) {
+        Button(onClick = {
+            onNavigateToPermissionsDeclined()
+        }
+        ) {
+            Text("Permissions")
+        }
     }
 }
 
@@ -96,13 +163,11 @@ fun DotsIndicator(
 }
 
 @Composable
-private fun pageBackgroundColor(page: Int): Color {
-    return when (page) {
-        0 -> PageBackgroundColor.ThemePrimary.color()
-        1 -> PageBackgroundColor.ThemeSecondary.color()
-        2 -> PageBackgroundColor.ThemeTertiary.color()
-        else -> MaterialTheme.colorScheme.background
-    }
+private fun pageBackgroundColor(page: Int): Color = when (page) {
+    0 -> PageBackgroundColor.ThemePrimary.color()
+    1 -> PageBackgroundColor.ThemeSecondary.color()
+    2 -> PageBackgroundColor.ThemeTertiary.color()
+    else -> MaterialTheme.colorScheme.background
 }
 
 @Preview
@@ -111,6 +176,6 @@ fun DotsIndicatorPreview() {
     DotsIndicator(
         totalDots = 5,
         selectedIndex = 2,
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.padding(16.dp),
     )
 }
