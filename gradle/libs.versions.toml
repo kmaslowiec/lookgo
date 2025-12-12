@@ -18,6 +18,7 @@ playServicesLocation = "21.3.0"
 retrofit = "3.0.0"
 runtimeLivedata = "1.8.3"
 navigationCompose = "2.9.1"
+turbine = "1.2.1"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -45,6 +46,7 @@ mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "moc
 jetbrains-coroutine-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
