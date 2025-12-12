@@ -19,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +27,11 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.kmaslowiec.lookgo.welcome.uievent.WelcomePagerUIEvent
+import com.kmaslowiec.lookgo.welcome.viemodel.WelcomePagerViewModel
+import kotlinx.coroutines.flow.collectLatest
 
 enum class PageBackgroundColor(val color: @Composable () -> Color) {
     ThemePrimary({ MaterialTheme.colorScheme.primary }),
@@ -39,13 +44,22 @@ enum class PageBackgroundColor(val color: @Composable () -> Color) {
 fun WelcomePagerScreen(
     modifier: Modifier,
     onNavigateToLocationPermission: () -> Unit,
+    welcomePagerViewModel: WelcomePagerViewModel = hiltViewModel()
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
+
+    LaunchedEffect(Unit) {
+        welcomePagerViewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                WelcomePagerUIEvent.NavigateToLocationPermissionScreen -> onNavigateToLocationPermission()
+            }
+        }
+    }
 
     WelcomePager(
         modifier = modifier,
         pagerState = pagerState,
-        onNavigateToPermissionsDeclined = onNavigateToLocationPermission,
+        onPermissionButtonClick = welcomePagerViewModel::onPermissionActionClick
     )
 }
 
@@ -54,7 +68,7 @@ fun WelcomePagerScreen(
 private fun WelcomePager(
     modifier: Modifier = Modifier,
     pagerState: PagerState,
-    onNavigateToPermissionsDeclined: () -> Unit,
+    onPermissionButtonClick: () -> Unit
 ) {
     Column(
         modifier = modifier,
@@ -79,12 +93,11 @@ private fun WelcomePager(
                     1 -> WelcomePage2(modifier)
                     2 -> WelcomePage3(
                         modifier = modifier,
-                        onNavigateToPermissionsDeclined = onNavigateToPermissionsDeclined,
+                        onPermissionButtonClick = onPermissionButtonClick,
                     )
                 }
             }
         }
-
 
         DotsIndicator(
             totalDots = 3,
@@ -115,14 +128,12 @@ fun WelcomePage2(modifier: Modifier) {
 }
 
 @Composable
-fun WelcomePage3(modifier: Modifier, onNavigateToPermissionsDeclined: () -> Unit) {
+fun WelcomePage3(modifier: Modifier, onPermissionButtonClick: () -> Unit) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier,
     ) {
-        Button(onClick = {
-            onNavigateToPermissionsDeclined()
-        }
+        Button(onClick = { onPermissionButtonClick() }
         ) {
             Text("Permissions")
         }
