@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.kmaslowiec.lookgo.location.view.CurrentLocationDisplay
+import com.kmaslowiec.lookgo.permissions.view.CurrentLocationDisplay
 import com.kmaslowiec.lookgo.location.viewmodel.LocationViewModel
 import com.kmaslowiec.lookgo.main.view.uistate.StopsState.Error
 import com.kmaslowiec.lookgo.main.view.uistate.StopsState.Loading

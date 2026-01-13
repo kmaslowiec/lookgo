@@ -13,10 +13,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,14 +30,17 @@ import com.kmaslowiec.lookgo.common.view.SimpleOkDialog
 import com.kmaslowiec.lookgo.main.viewmodel.PreferencesViewModel
 import com.kmaslowiec.lookgo.permissions.state.PermissionState
 import com.kmaslowiec.lookgo.permissions.toRuntimePermissionRequestState
+import com.kmaslowiec.lookgo.permissions.uievent.LocationPermissionUIEvent
+import com.kmaslowiec.lookgo.permissions.viewmodel.LocationPermissionViewModel
 import com.kmaslowiec.lookgo.preferences.state.PreferencesState
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun LocationPermissionScreen(
     modifier: Modifier,
-    preferencesViewModel: PreferencesViewModel = hiltViewModel(),
     onNavigateToMain: () -> Unit,
+    preferencesViewModel: PreferencesViewModel = hiltViewModel(),
+    locationPermissionsViewModel: LocationPermissionViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val locationPermissionsState = rememberMultiplePermissionsState(
@@ -48,8 +50,16 @@ fun LocationPermissionScreen(
         )
     )
     val isFirstTimeState by preferencesViewModel.preferencesState.collectAsState()
-    val isFirstTimeDialogVisible = remember { mutableStateOf(true) }
-    val isRationaleDialogVisible = remember { mutableStateOf(true) }
+    val isDialogShown by locationPermissionsViewModel.dialogState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        locationPermissionsViewModel.uiEvent.collect { uiEvent ->
+            when (uiEvent) {
+                is LocationPermissionUIEvent.NavigateToMainScreen -> onNavigateToMain()
+            }
+        }
+    }
+
     when (isFirstTimeState) {
         is PreferencesState.Loading -> {
             CircularProgressIndicator()
@@ -61,7 +71,7 @@ fun LocationPermissionScreen(
             )
             ) {
                 PermissionState.AllGranted -> {
-                    onNavigateToMain()
+                    locationPermissionsViewModel.onPermissionAllGranted()
                 }
 
                 PermissionState.NeverAgain -> {
@@ -72,22 +82,24 @@ fun LocationPermissionScreen(
                 }
 
                 PermissionState.FirstTime -> {
+                    locationPermissionsViewModel.showDialog()
                     FirstTimeView(
-                        isFirstTimeDialogVisible = isFirstTimeDialogVisible.value,
+                        isFirstTimeDialogVisible = isDialogShown,
                         onDismiss = {
                             locationPermissionsState.launchMultiplePermissionRequest()
-                            isFirstTimeDialogVisible.value = false
+                            locationPermissionsViewModel.dismissDialog()
                         }
                     )
                 }
 
                 PermissionState.BothDenied -> {
+                    locationPermissionsViewModel.showDialog()
                     BothDeniedView(
-                        isRationaleDialogVisible = isRationaleDialogVisible.value,
+                        isRationaleDialogVisible = isDialogShown,
                         preferencesViewModel = preferencesViewModel,
                         onDismiss = {
                             locationPermissionsState.launchMultiplePermissionRequest()
-                            isRationaleDialogVisible.value = false
+                            locationPermissionsViewModel.dismissDialog()
                         }
                     )
                 }

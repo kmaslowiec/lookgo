@@ -70,6 +70,7 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockk.android)
     testImplementation(libs.jetbrains.coroutine.test)
+    testImplementation(libs.turbine)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }

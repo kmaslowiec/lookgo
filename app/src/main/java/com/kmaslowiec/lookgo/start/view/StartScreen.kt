@@ -13,6 +13,8 @@ import com.kmaslowiec.lookgo.main.viewmodel.PreferencesViewModel
 import com.kmaslowiec.lookgo.permissions.state.PermissionState
 import com.kmaslowiec.lookgo.permissions.toRuntimePermissionRequestState
 import com.kmaslowiec.lookgo.preferences.state.PreferencesState
+import com.kmaslowiec.lookgo.start.uievent.StartUIEvent
+import com.kmaslowiec.lookgo.start.viewmodel.StartViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -21,6 +23,7 @@ fun StartScreen(
     onNavigateToMain: () -> Unit,
     onNavigateToLocationPermission: () -> Unit,
     preferencesViewModel: PreferencesViewModel = hiltViewModel(),
+    startViewModel: StartViewModel = hiltViewModel()
 ) {
     val isFirstTimeState by preferencesViewModel.preferencesState.collectAsState()
     val locationPermissionsState = rememberMultiplePermissionsState(
@@ -29,27 +32,32 @@ fun StartScreen(
             Manifest.permission.ACCESS_FINE_LOCATION,
         )
     )
+
+    LaunchedEffect(Unit) {
+        startViewModel.uiEvent.collect { event ->
+            when (event) {
+                is StartUIEvent.NavigateToMainScreen -> onNavigateToMain()
+                is StartUIEvent.NavigateToNavigateToWelcome -> onNavigateToWelcome()
+                is StartUIEvent.NavigateToNavigateToLocationPermission -> onNavigateToLocationPermission()
+            }
+        }
+    }
+
     if (isFirstTimeState is PreferencesState.Loading) {
         CircularProgressIndicator()
     } else {
         when (locationPermissionsState.toRuntimePermissionRequestState((isFirstTimeState as PreferencesState.Success).isFirstTime)) {
             PermissionState.AllGranted -> {
-                LaunchedEffect(Unit) {
-                    onNavigateToMain()
-                }
+                startViewModel.onPermissionAllGranted()
 
             }
 
             PermissionState.FirstTime -> {
-                LaunchedEffect(Unit) {
-                    onNavigateToWelcome()
-                }
+                startViewModel.onFirstTime()
             }
 
             else -> {
-                LaunchedEffect(Unit) {
-                    onNavigateToLocationPermission()
-                }
+                startViewModel.onOtherPermissions()
             }
         }
     }
