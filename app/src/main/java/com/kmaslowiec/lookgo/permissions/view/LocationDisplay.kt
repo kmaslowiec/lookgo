@@ -1,4 +1,4 @@
-package com.kmaslowiec.lookgo.location.view
+package com.kmaslowiec.lookgo.permissions.view
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
