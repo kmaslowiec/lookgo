@@ -45,9 +45,7 @@ class AppPreferencesRepositoryImplTest {
 
     @Test
     fun `isFirstTime returns true by default`() = runTest {
-        val result = tested.isFirstTime.first()
-
-        assertTrue(result)
+        assertTrue(tested.isFirstTime.first())
     }
 
     @Test

@@ -22,21 +22,25 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.kmaslowiec.lookgo.permissions.view.CurrentLocationDisplay
-import com.kmaslowiec.lookgo.location.viewmodel.LocationViewModel
-import com.kmaslowiec.lookgo.main.view.uistate.StopsState.Error
-import com.kmaslowiec.lookgo.main.view.uistate.StopsState.Loading
-import com.kmaslowiec.lookgo.main.view.uistate.StopsState.Success
+import com.kmaslowiec.lookgo.common.domain.LookgoError.EmptyList
+import com.kmaslowiec.lookgo.common.domain.LookgoError.Network
+import com.kmaslowiec.lookgo.common.domain.LookgoError.Server
+import com.kmaslowiec.lookgo.common.domain.LookgoError.Unknown
+import com.kmaslowiec.lookgo.main.view.uievent.MainUIEvent
+import com.kmaslowiec.lookgo.main.view.uistate.MainScreenUiState
+import com.kmaslowiec.lookgo.main.view.uistate.MainScreenUiState.Loading
+import com.kmaslowiec.lookgo.main.view.uistate.MainScreenUiState.Success
+import com.kmaslowiec.lookgo.main.viewmodel.MainViewModel
 import com.kmaslowiec.lookgo.permissions.state.PermissionState
 import com.kmaslowiec.lookgo.permissions.toRuntimePermissionRequestState
+import com.kmaslowiec.lookgo.permissions.view.CurrentLocationDisplay
 import com.kmaslowiec.lookgo.stops.model.Stop
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MainScreen(
-    modifier: Modifier,
-    onNavigateToLocationPermission: () -> Unit,
-    locationViewModel: LocationViewModel = hiltViewModel()
+    modifier: Modifier, onNavigateToLocationPermission: () -> Unit,
+    mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val locationPermissionsState = rememberMultiplePermissionsState(
         listOf(
@@ -44,21 +48,27 @@ fun MainScreen(
             Manifest.permission.ACCESS_FINE_LOCATION,
         )
     )
-    val currentLocation = locationViewModel.currentLocation.collectAsState()
-    val stopsState by locationViewModel.stopsState.collectAsState()
+    val currentLocation = mainViewModel.currentLocation.collectAsState()
+    val mainScreenUiState by mainViewModel.mainScreenUiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        mainViewModel.uiEvents.collect { event ->
+            when (event) {
+                is MainUIEvent.NavigateToLocationPermission -> onNavigateToLocationPermission()
+            }
+        }
+    }
+
     LaunchedEffect(locationPermissionsState.toRuntimePermissionRequestState()) { }
     when (locationPermissionsState.toRuntimePermissionRequestState()) {
         PermissionState.BothDenied, PermissionState.NeverAgain -> {
-            LaunchedEffect(Unit) {
-                onNavigateToLocationPermission()
-            }
+            mainViewModel.onNavigateToLocationPermission()
         }
 
         else -> {
             LaunchedEffect(currentLocation.value) {
-                locationViewModel.getNearBusStops()
+                mainViewModel.getNearBusStops()
             }
-
             Column(
                 modifier = modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceEvenly,
@@ -68,13 +78,17 @@ fun MainScreen(
                     latitude = currentLocation.value.latitude,
                     longitude = currentLocation.value.longitude,
                 )
-                when (stopsState) {
-                    is Success -> {
-                        NearBusStopsList((stopsState as Success).stops)
+                when (val state = mainScreenUiState) {
+                    is Success -> NearBusStopsList(state.stops)
+                    is Loading -> CircularProgressIndicator()
+                    is MainScreenUiState.Exception -> {
+                        when (state.exception) {
+                            is EmptyList -> {}
+                            is Network -> {}
+                            is Server -> {}
+                            is Unknown -> {}
+                        }
                     }
-
-                    is Error -> {} // TODO: Handle Stop List error
-                    Loading -> CircularProgressIndicator()
                 }
             }
         }
@@ -100,8 +114,7 @@ fun NearBusStopsList(stops: List<Stop>) {
 @Composable
 fun CurrentLocationDisplayPreview() {
     CurrentLocationDisplay(
-        latitude = 13.0,
-        longitude = 666.0
+        latitude = 13.0, longitude = 666.0
     )
 }
 
