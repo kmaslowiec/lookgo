@@ -1,4 +1,4 @@
-package com.kmaslowiec.lookgo.main.viewmodel
+package com.kmaslowiec.lookgo.preferences.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

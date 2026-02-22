@@ -1,7 +1,7 @@
 package com.kmaslowiec.lookgo.mainviewmodel
 
 import com.kmaslowiec.lookgo.CoroutinesUnconfinedDispatcherTestExtension
-import com.kmaslowiec.lookgo.main.viewmodel.PreferencesViewModel
+import com.kmaslowiec.lookgo.preferences.viewmodel.PreferencesViewModel
 import com.kmaslowiec.lookgo.preferences.AppPreferencesRepository
 import com.kmaslowiec.lookgo.preferences.state.PreferencesState
 import io.mockk.coVerify

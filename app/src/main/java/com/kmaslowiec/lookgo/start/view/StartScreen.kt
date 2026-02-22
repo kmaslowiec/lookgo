@@ -9,7 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.kmaslowiec.lookgo.main.viewmodel.PreferencesViewModel
+import com.kmaslowiec.lookgo.preferences.viewmodel.PreferencesViewModel
 import com.kmaslowiec.lookgo.permissions.state.PermissionState
 import com.kmaslowiec.lookgo.permissions.toRuntimePermissionRequestState
 import com.kmaslowiec.lookgo.preferences.state.PreferencesState
@@ -49,7 +49,6 @@ fun StartScreen(
         when (locationPermissionsState.toRuntimePermissionRequestState((isFirstTimeState as PreferencesState.Success).isFirstTime)) {
             PermissionState.AllGranted -> {
                 startViewModel.onPermissionAllGranted()
-
             }
 
             PermissionState.FirstTime -> {

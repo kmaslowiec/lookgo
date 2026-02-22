@@ -27,7 +27,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.kmaslowiec.lookgo.R
 import com.kmaslowiec.lookgo.common.utils.goToApplicationSettings
 import com.kmaslowiec.lookgo.common.view.SimpleOkDialog
-import com.kmaslowiec.lookgo.main.viewmodel.PreferencesViewModel
+import com.kmaslowiec.lookgo.preferences.viewmodel.PreferencesViewModel
 import com.kmaslowiec.lookgo.permissions.state.PermissionState
 import com.kmaslowiec.lookgo.permissions.toRuntimePermissionRequestState
 import com.kmaslowiec.lookgo.permissions.uievent.LocationPermissionUIEvent
