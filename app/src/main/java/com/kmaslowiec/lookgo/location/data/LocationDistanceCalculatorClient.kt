@@ -2,7 +2,7 @@ package com.kmaslowiec.lookgo.location.data
 
 import com.kmaslowiec.lookgo.location.model.LocationCoordinates
 
-interface LocationDistanceToClient {
+interface LocationDistanceCalculatorClient {
     fun currentLocationDistanceTo(
         currentLocation: LocationCoordinates,
         latitude: Double,
