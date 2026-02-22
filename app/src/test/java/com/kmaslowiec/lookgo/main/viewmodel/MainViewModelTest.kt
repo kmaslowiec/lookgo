@@ -4,7 +4,7 @@ import app.cash.turbine.test
 import com.kmaslowiec.lookgo.common.domain.LookgoError
 import com.kmaslowiec.lookgo.common.domain.LookgoResult
 import com.kmaslowiec.lookgo.location.model.LocationCoordinates
-import com.kmaslowiec.lookgo.location.usecase.impl.LocationDistanceToUseCaseImpl
+import com.kmaslowiec.lookgo.location.usecase.impl.LocationDistanceCalculatorUseCaseImpl
 import com.kmaslowiec.lookgo.location.usecase.impl.LocationUpdatesUseCaseImpl
 import com.kmaslowiec.lookgo.main.view.uievent.MainUIEvent
 import com.kmaslowiec.lookgo.main.view.uistate.MainScreenUiState
@@ -25,7 +25,7 @@ class MainViewModelTest {
         every { locationUpdates() } returns emptyFlow()
     }
 
-    val locationDistanceToUseCase = mockk<LocationDistanceToUseCaseImpl>(relaxed = true) {
+    val locationDistanceToUseCase = mockk<LocationDistanceCalculatorUseCaseImpl>(relaxed = true) {
         every { currentLocationDistanceTo(any(), any(), any()) } returns 0f
     }
 
@@ -35,7 +35,7 @@ class MainViewModelTest {
 
     val viewModel = MainViewModel(
         locationUpdatesUseCase = locationUpdatesUseCase,
-        locationDistanceToUseCase = locationDistanceToUseCase,
+        locationDistanceCalculatorUseCase = locationDistanceToUseCase,
         repo = repo
     )
 
@@ -54,7 +54,7 @@ class MainViewModelTest {
             every { locationUpdates() } returns emptyFlow()
         }
 
-        val locationDistanceToUseCase = mockk<LocationDistanceToUseCaseImpl>(relaxed = true) {
+        val locationDistanceToUseCase = mockk<LocationDistanceCalculatorUseCaseImpl>(relaxed = true) {
             every { currentLocationDistanceTo(any(), any(), any()) } returns 0f
         }
 
@@ -110,7 +110,7 @@ class MainViewModelTest {
 
         val viewModel = MainViewModel(
             locationUpdatesUseCase = locationUpdatesUseCase,
-            locationDistanceToUseCase = locationDistanceToUseCase,
+            locationDistanceCalculatorUseCase = locationDistanceToUseCase,
             repo = repo
         )
 
@@ -131,7 +131,7 @@ class MainViewModelTest {
         every { repo.getStops() } returns flowOf(lookgoResult)
         val viewModel = MainViewModel(
             locationUpdatesUseCase = locationUpdatesUseCase,
-            locationDistanceToUseCase = locationDistanceToUseCase,
+            locationDistanceCalculatorUseCase = locationDistanceToUseCase,
             repo = repo
         )
 

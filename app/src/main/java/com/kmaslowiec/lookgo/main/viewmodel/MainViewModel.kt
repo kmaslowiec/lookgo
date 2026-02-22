@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kmaslowiec.lookgo.common.domain.LookgoResult
 import com.kmaslowiec.lookgo.location.model.LocationCoordinates
-import com.kmaslowiec.lookgo.location.usecase.LocationDistanceToUseCase
+import com.kmaslowiec.lookgo.location.usecase.LocationDistanceCalculatorUseCase
 import com.kmaslowiec.lookgo.location.usecase.LocationUpdatesUseCase
 import com.kmaslowiec.lookgo.main.view.uievent.MainUIEvent
 import com.kmaslowiec.lookgo.main.view.uistate.MainScreenUiState
@@ -21,7 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val locationUpdatesUseCase: LocationUpdatesUseCase,
-    private val locationDistanceToUseCase: LocationDistanceToUseCase,
+    private val locationDistanceCalculatorUseCase: LocationDistanceCalculatorUseCase,
     private val repo: StopsRepository
 ) : ViewModel() {
     private val _currentLocation = MutableStateFlow(LocationCoordinates(0.0, 0.0))
@@ -72,7 +72,7 @@ class MainViewModel @Inject constructor(
             }
         }
     }
-    private fun isBusStopNearby(stop: Stop): Boolean = locationDistanceToUseCase.currentLocationDistanceTo(
+    private fun isBusStopNearby(stop: Stop): Boolean = locationDistanceCalculatorUseCase.currentLocationDistanceTo(
         currentLocation = currentLocation.value,
         latitude = stop.latitude,
         longitude = stop.longitude
