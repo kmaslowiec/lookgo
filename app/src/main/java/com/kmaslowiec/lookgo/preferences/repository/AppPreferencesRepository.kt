@@ -1,8 +1,10 @@
-package com.kmaslowiec.lookgo.preferences
+package com.kmaslowiec.lookgo.preferences.repository
 
 import kotlinx.coroutines.flow.Flow
 
 interface AppPreferencesRepository {
     suspend fun firstTimeAccess()
     val isFirstTime: Flow<Boolean>
+    suspend fun saveETag()
+    val storedETag: Flow<String>
 }
