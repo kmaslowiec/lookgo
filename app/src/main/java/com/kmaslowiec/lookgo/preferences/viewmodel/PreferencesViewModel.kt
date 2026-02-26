@@ -2,7 +2,7 @@ package com.kmaslowiec.lookgo.preferences.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kmaslowiec.lookgo.preferences.AppPreferencesRepository
+import com.kmaslowiec.lookgo.preferences.repository.AppPreferencesRepository
 import com.kmaslowiec.lookgo.preferences.state.PreferencesState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

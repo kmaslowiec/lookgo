@@ -3,8 +3,8 @@ package com.kmaslowiec.lookgo.common.di.preferences
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import com.kmaslowiec.lookgo.preferences.AppPreferencesRepository
-import com.kmaslowiec.lookgo.preferences.AppPreferencesRepositoryImpl
+import com.kmaslowiec.lookgo.preferences.repository.AppPreferencesRepository
+import com.kmaslowiec.lookgo.preferences.repository.impl.AppPreferencesRepositoryImpl
 import com.kmaslowiec.lookgo.util.dataStore
 import dagger.Module
 import dagger.Provides
@@ -14,10 +14,10 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-object DataStoreModule {
+object PreferencesModule {
 
     @Provides
-    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+    fun providePreferencesDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
         context.dataStore
 
     @Provides
