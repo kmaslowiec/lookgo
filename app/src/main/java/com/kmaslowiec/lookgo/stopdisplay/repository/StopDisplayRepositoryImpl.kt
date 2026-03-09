@@ -1,6 +1,6 @@
 package com.kmaslowiec.lookgo.stopdisplay.repository
 
-import com.kmaslowiec.lookgo.api.ApiService
+import com.kmaslowiec.lookgo.network.ApiService
 import javax.inject.Inject
 
 class StopDisplayRepositoryImpl @Inject constructor(private val api: ApiService) :

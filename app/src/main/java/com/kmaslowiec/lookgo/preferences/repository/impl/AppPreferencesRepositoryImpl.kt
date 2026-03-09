@@ -4,7 +4,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.kmaslowiec.lookgo.preferences.repository.AppPreferencesRepository
-import com.kmaslowiec.lookgo.util.eTagPreferencesKey
 import com.kmaslowiec.lookgo.util.isFirstTimePreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -22,14 +21,4 @@ class AppPreferencesRepositoryImpl @Inject constructor(private val dataStore: Da
         dataStore.data.map { preferences ->
             preferences[isFirstTimePreferencesKey] != false
         }
-
-    override suspend fun saveETag() {
-        dataStore.edit { preferences ->
-            preferences[eTagPreferencesKey] = ""
-        }
-    }
-
-    override val storedETag: Flow<String> = dataStore.data.map { preferences ->
-        preferences[eTagPreferencesKey] ?: ""
-    }
 }

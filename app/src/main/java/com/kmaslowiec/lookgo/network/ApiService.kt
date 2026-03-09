@@ -1,4 +1,4 @@
-package com.kmaslowiec.lookgo.api
+package com.kmaslowiec.lookgo.network
 
 import com.kmaslowiec.lookgo.stopdisplay.model.StopDisplay
 import com.kmaslowiec.lookgo.stops.model.Stops

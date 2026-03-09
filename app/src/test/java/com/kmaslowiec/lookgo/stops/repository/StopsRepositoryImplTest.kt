@@ -1,7 +1,7 @@
 package com.kmaslowiec.lookgo.stops.repository
 
 import app.cash.turbine.test
-import com.kmaslowiec.lookgo.api.ApiService
+import com.kmaslowiec.lookgo.network.ApiService
 import com.kmaslowiec.lookgo.common.domain.LookgoError
 import com.kmaslowiec.lookgo.common.domain.LookgoResult
 import com.kmaslowiec.lookgo.stops.model.Stop
@@ -44,7 +44,6 @@ class StopsRepositoryImplTest {
                 )
             )
         )
-
         coEvery { api.getStops() } returns stops
 
         stopsRepository.getStops().test {
@@ -70,7 +69,6 @@ class StopsRepositoryImplTest {
         val emptyStops = Stops(
             data = emptyList()
         )
-
         coEvery { api.getStops() } returns emptyStops
 
         stopsRepository.getStops().test {
