@@ -1,9 +1,9 @@
 package com.kmaslowiec.lookgo.stops.repository
 
-import com.kmaslowiec.lookgo.api.ApiService
 import com.kmaslowiec.lookgo.common.domain.LookgoError
 import com.kmaslowiec.lookgo.common.domain.LookgoResult
 import com.kmaslowiec.lookgo.common.domain.toStopsError
+import com.kmaslowiec.lookgo.network.ApiService
 import com.kmaslowiec.lookgo.stops.model.Stops
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
