@@ -53,6 +53,7 @@ class MainViewModel @Inject constructor(
                                     })
                         }
 
+                        is LookgoResult.NotModified -> {}
                         is LookgoResult.Error -> {
                             _mainScreenUiState.value = MainScreenUiState.Exception(stopsResult.exception)
                         }
@@ -72,6 +73,7 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+
     private fun isBusStopNearby(stop: Stop): Boolean = locationDistanceCalculatorUseCase.currentLocationDistanceTo(
         currentLocation = currentLocation.value,
         latitude = stop.latitude,
