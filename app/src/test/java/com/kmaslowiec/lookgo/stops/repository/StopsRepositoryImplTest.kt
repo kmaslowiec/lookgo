@@ -1,12 +1,13 @@
 package com.kmaslowiec.lookgo.stops.repository
 
 import app.cash.turbine.test
-import com.kmaslowiec.lookgo.network.ApiService
 import com.kmaslowiec.lookgo.common.domain.LookgoError
 import com.kmaslowiec.lookgo.common.domain.LookgoResult
+import com.kmaslowiec.lookgo.network.ApiService
 import com.kmaslowiec.lookgo.stops.model.Stop
 import com.kmaslowiec.lookgo.stops.model.Stops
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import retrofit2.HttpException
+import retrofit2.Response
 import retrofit2.Response.error
 import java.io.IOException
 
@@ -44,7 +46,7 @@ class StopsRepositoryImplTest {
                 )
             )
         )
-        coEvery { api.getStops() } returns stops
+        coEvery { api.getStops() } returns Response.success(stops)
 
         stopsRepository.getStops().test {
             val result = awaitItem()
@@ -66,17 +68,16 @@ class StopsRepositoryImplTest {
 
     @Test
     fun `getStops emits EmptyList Exception when an empty list is given`() = runTest {
-        val emptyStops = Stops(
-            data = emptyList()
-        )
-        coEvery { api.getStops() } returns emptyStops
+        val response = mockk<Response<Stops>>()
+        every { response.code() } returns 200
+        every { response.body() } returns Stops(emptyList())
+        coEvery { api.getStops() } returns response
 
         stopsRepository.getStops().test {
             val result = awaitItem()
             assertEquals(LookgoResult.Error(LookgoError.EmptyList), result)
             awaitComplete()
         }
-
     }
 
     @Test
@@ -100,6 +101,20 @@ class StopsRepositoryImplTest {
             val result = awaitItem()
             assertTrue(result is LookgoResult.Error)
             assertEquals(LookgoResult.Error(LookgoError.Server(404)), result)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `getStops emits NotModified result when response code is 304`() = runTest {
+        val response = mockk<Response<Stops>>()
+        every { response.code() } returns 304
+        every { response.body() } returns null
+        coEvery { api.getStops() } returns response
+
+        stopsRepository.getStops().test {
+            val result = awaitItem()
+            assertTrue(result is LookgoResult.NotModified)
             awaitComplete()
         }
     }

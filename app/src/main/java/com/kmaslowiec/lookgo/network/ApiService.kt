@@ -2,13 +2,14 @@ package com.kmaslowiec.lookgo.network
 
 import com.kmaslowiec.lookgo.stopdisplay.model.StopDisplay
 import com.kmaslowiec.lookgo.stops.model.Stops
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 
 interface ApiService {
 
     @GET("stops")
-    suspend fun getStops(): Stops
+    suspend fun getStops(): Response<Stops>
 
     @GET("displays/{stopNumber}")
     suspend fun getStopDisplay(

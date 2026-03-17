@@ -124,6 +124,27 @@ class MainViewModelTest {
     }
 
     @Test
+    fun `getNearBusStops should emits Loading when receives NotModified`() = runTest {
+        val lookgoResult = LookgoResult.NotModified
+        val location = mockk<LocationCoordinates>()
+        every { locationUpdatesUseCase.locationUpdates() } returns flowOf(location)
+        every { repo.getStops() } returns flowOf(lookgoResult)
+
+        val viewModel = MainViewModel(
+            locationUpdatesUseCase = locationUpdatesUseCase,
+            locationDistanceCalculatorUseCase = locationDistanceToUseCase,
+            repo = repo
+        )
+
+        viewModel.mainScreenUiState.test {
+            viewModel.getNearBusStops()
+
+            assertEquals(MainScreenUiState.Loading, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `getNearBusStops should emit Exception when receives exception`() = runTest {
         val lookgoResult = LookgoResult.Error(LookgoError.EmptyList)
         val location = mockk<LocationCoordinates>()
