@@ -46,7 +46,15 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.core.ktx)
+    implementation(libs.androidx.junit.ktx)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.paging)
+    testImplementation(libs.androidx.room.testing)
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.paging.compose)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.google.hilt.android)
     ksp(libs.google.hilt.ksp.compiler)
@@ -73,4 +81,9 @@ dependencies {
     testImplementation(libs.turbine)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.room.testing)
+    androidTestImplementation(libs.jetbrains.coroutine.test)
+    androidTestImplementation(libs.androidx.junit.ktx )
+    androidTestImplementation(libs.core.ktx)
 }
