@@ -1,0 +1,439 @@
+Subject: [PATCH] Patch from Cognizant iMac
+---
+Index: .gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.gitignore b/.gitignore
+--- a/.gitignore	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/.gitignore	(date 1784660124403)
+@@ -17,4 +17,5 @@
+ render.experimental.xml
+ *.jks
+ *.keystore
+-*.hprof
+\ No newline at end of file
++*.hprof
++.DS_Store
+\ No newline at end of file
+Index: app/src/main/java/com/kmaslowiec/lookgo/persistence/StopEntity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/kmaslowiec/lookgo/persistence/StopEntity.kt b/app/src/main/java/com/kmaslowiec/lookgo/persistence/stop/StopEntity.kt
+rename from app/src/main/java/com/kmaslowiec/lookgo/persistence/StopEntity.kt
+rename to app/src/main/java/com/kmaslowiec/lookgo/persistence/stop/StopEntity.kt
+--- a/app/src/main/java/com/kmaslowiec/lookgo/persistence/StopEntity.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/main/java/com/kmaslowiec/lookgo/persistence/stop/StopEntity.kt	(date 1784660124459)
+@@ -1,4 +1,4 @@
+-package com.kmaslowiec.lookgo.persistence
++package com.kmaslowiec.lookgo.persistence.stop
+ 
+ import androidx.room.ColumnInfo
+ import androidx.room.Entity
+@@ -18,7 +18,7 @@
+     val parkAndRide: Boolean,
+ 
+     @ColumnInfo(name = "railway_station_name")
+-    val railwayStationName: String,
++    val railwayStationName: String?,
+ 
+     @ColumnInfo(name = "request_stop")
+     val requestStop: Boolean,
+Index: app/src/main/java/com/kmaslowiec/lookgo/main/viewmodel/MainViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/kmaslowiec/lookgo/main/viewmodel/MainViewModel.kt b/app/src/main/java/com/kmaslowiec/lookgo/main/viewmodel/MainViewModel.kt
+--- a/app/src/main/java/com/kmaslowiec/lookgo/main/viewmodel/MainViewModel.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/main/java/com/kmaslowiec/lookgo/main/viewmodel/MainViewModel.kt	(date 1784660124424)
+@@ -1,5 +1,6 @@
+ package com.kmaslowiec.lookgo.main.viewmodel
+ 
++import android.util.Log
+ import androidx.lifecycle.ViewModel
+ import androidx.lifecycle.viewModelScope
+ import com.kmaslowiec.lookgo.common.domain.LookgoResult
+@@ -45,7 +46,16 @@
+                 .collect { stopsResult ->
+                     when (stopsResult) {
+                         is LookgoResult.Success -> {
+-                            _mainScreenUiState.value = MainScreenUiState.Success(
++                            showStops(
++                                stopsResult
++                                    .value
++                                    .data.filter { stop ->
++                                        isBusStopNearby(stop)
++                                    })
++                        }
++
++                        is LookgoResult.NotModified -> {
++                            showStops(
+                                 stopsResult
+                                     .value
+                                     .data.filter { stop ->
+@@ -53,7 +63,6 @@
+                                     })
+                         }
+ 
+-                        is LookgoResult.NotModified -> {}
+                         is LookgoResult.Error -> {
+                             _mainScreenUiState.value = MainScreenUiState.Exception(stopsResult.exception)
+                         }
+@@ -62,6 +71,12 @@
+         }
+     }
+ 
++    private fun showStops(stops: List<Stop>) {
++        _mainScreenUiState.value = MainScreenUiState.Success(
++            stops
++        )
++    }
++
+     fun onNavigateToLocationPermission() {
+         handleUIEvent(MainUIEvent.NavigateToLocationPermission)
+     }
+Index: app/src/test/java/com/kmaslowiec/lookgo/stops/repository/StopsRepositoryImplTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/test/java/com/kmaslowiec/lookgo/stops/repository/StopsRepositoryImplTest.kt b/app/src/test/java/com/kmaslowiec/lookgo/stops/repository/StopsRepositoryImplTest.kt
+--- a/app/src/test/java/com/kmaslowiec/lookgo/stops/repository/StopsRepositoryImplTest.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/test/java/com/kmaslowiec/lookgo/stops/repository/StopsRepositoryImplTest.kt	(date 1784660124497)
+@@ -4,6 +4,7 @@
+ import com.kmaslowiec.lookgo.common.domain.LookgoError
+ import com.kmaslowiec.lookgo.common.domain.LookgoResult
+ import com.kmaslowiec.lookgo.network.ApiService
++import com.kmaslowiec.lookgo.persistence.stop.StopDao
+ import com.kmaslowiec.lookgo.stops.model.Stop
+ import com.kmaslowiec.lookgo.stops.model.Stops
+ import io.mockk.coEvery
+@@ -21,12 +22,16 @@
+ import java.io.IOException
+ 
+ class StopsRepositoryImplTest {
+-    private val api: ApiService = mockk()
++    private val apiService: ApiService = mockk()
++    private val stopDao: StopDao = mockk()
+     private lateinit var stopsRepository: StopsRepositoryImpl
+ 
+     @BeforeEach
+     fun setUp() {
+-        stopsRepository = StopsRepositoryImpl(api)
++        stopsRepository = StopsRepositoryImpl(
++            api = apiService,
++            stopDao = stopDao
++        )
+     }
+ 
+     @Test
+@@ -46,7 +51,7 @@
+                 )
+             )
+         )
+-        coEvery { api.getStops() } returns Response.success(stops)
++        coEvery { apiService.getStops() } returns Response.success(stops)
+ 
+         stopsRepository.getStops().test {
+             val result = awaitItem()
+@@ -57,7 +62,7 @@
+ 
+     @Test
+     fun `getStops emits LookgoResult Exception on failure`() = runTest {
+-        coEvery { api.getStops() } throws Throwable()
++        coEvery { apiService.getStops() } throws Throwable()
+ 
+         stopsRepository.getStops().test {
+             val result = awaitItem()
+@@ -71,7 +76,7 @@
+         val response = mockk<Response<Stops>>()
+         every { response.code() } returns 200
+         every { response.body() } returns Stops(emptyList())
+-        coEvery { api.getStops() } returns response
++        coEvery { apiService.getStops() } returns response
+ 
+         stopsRepository.getStops().test {
+             val result = awaitItem()
+@@ -82,7 +87,7 @@
+ 
+     @Test
+     fun `getStops emits Network Exception when IOException is thrown`() = runTest {
+-        coEvery { api.getStops() } throws IOException()
++        coEvery { apiService.getStops() } throws IOException()
+ 
+         stopsRepository.getStops().test {
+             val result = awaitItem()
+@@ -95,7 +100,7 @@
+     @Test
+     fun `getStops emits Server Exception when HttpException is thrown`() = runTest {
+         val responseBody: ResponseBody = mockk(relaxed = true)
+-        coEvery { api.getStops() } throws HttpException(error<Unit>(404, responseBody))
++        coEvery { apiService.getStops() } throws HttpException(error<Unit>(404, responseBody))
+ 
+         stopsRepository.getStops().test {
+             val result = awaitItem()
+@@ -110,7 +115,7 @@
+         val response = mockk<Response<Stops>>()
+         every { response.code() } returns 304
+         every { response.body() } returns null
+-        coEvery { api.getStops() } returns response
++        coEvery { apiService.getStops() } returns response
+ 
+         stopsRepository.getStops().test {
+             val result = awaitItem()
+@@ -122,7 +127,7 @@
+     @Test
+     fun `getStops emits Unknown Exception when unknown exception is thrown`() = runTest {
+         val cause: Throwable = mockk(relaxed = true)
+-        coEvery { api.getStops() } throws RuntimeException("message", cause)
++        coEvery { apiService.getStops() } throws RuntimeException("message", cause)
+ 
+         stopsRepository.getStops().test {
+             val result = awaitItem()
+Index: app/src/main/java/com/kmaslowiec/lookgo/persistence/StopDao.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/kmaslowiec/lookgo/persistence/StopDao.kt b/app/src/main/java/com/kmaslowiec/lookgo/persistence/stop/StopDao.kt
+rename from app/src/main/java/com/kmaslowiec/lookgo/persistence/StopDao.kt
+rename to app/src/main/java/com/kmaslowiec/lookgo/persistence/stop/StopDao.kt
+--- a/app/src/main/java/com/kmaslowiec/lookgo/persistence/StopDao.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/main/java/com/kmaslowiec/lookgo/persistence/stop/StopDao.kt	(date 1784660124434)
+@@ -1,4 +1,4 @@
+-package com.kmaslowiec.lookgo.persistence
++package com.kmaslowiec.lookgo.persistence.stop
+ 
+ import androidx.room.Dao
+ import androidx.room.Insert
+Index: app/src/main/java/com/kmaslowiec/lookgo/stops/repository/StopsRepositoryImpl.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/kmaslowiec/lookgo/stops/repository/StopsRepositoryImpl.kt b/app/src/main/java/com/kmaslowiec/lookgo/stops/repository/StopsRepositoryImpl.kt
+--- a/app/src/main/java/com/kmaslowiec/lookgo/stops/repository/StopsRepositoryImpl.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/main/java/com/kmaslowiec/lookgo/stops/repository/StopsRepositoryImpl.kt	(date 1784660124489)
+@@ -4,32 +4,66 @@
+ import com.kmaslowiec.lookgo.common.domain.LookgoResult
+ import com.kmaslowiec.lookgo.common.domain.toStopsError
+ import com.kmaslowiec.lookgo.network.ApiService
++import com.kmaslowiec.lookgo.persistence.stop.StopDao
++import com.kmaslowiec.lookgo.persistence.stop.StopEntity
++import com.kmaslowiec.lookgo.stops.model.Stop
+ import com.kmaslowiec.lookgo.stops.model.Stops
++import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.flow.Flow
++import kotlinx.coroutines.flow.catch
+ import kotlinx.coroutines.flow.flow
++import kotlinx.coroutines.flow.flowOn
+ import javax.inject.Inject
+ 
+-class StopsRepositoryImpl @Inject constructor(private val api: ApiService) : StopsRepository {
+-
++class StopsRepositoryImpl @Inject constructor(private val api: ApiService, private val stopDao: StopDao) : StopsRepository { //Write a test that checks what happens if one of the values is null in the Stop entity. The data from cache is not displayed
+     override fun getStops(): Flow<LookgoResult<Stops, LookgoError>> = flow {
+-        try {
+-            val response = api.getStops()
+-            if (response.code() == 304) {
+-                emit(LookgoResult.NotModified)
+-                return@flow
+-            } else {
+-                response.body()?.let { stops ->
+-                    if (stops.data.isEmpty()) {
+-                        emit(LookgoResult.Error(LookgoError.EmptyList))
+-                        return@flow
+-                    } else {
+-                        emit(LookgoResult.Success(stops))
+-                        return@flow
+-                    }
+-                }
++        val response = api.getStops()
++
++        when (response.code()) {
++            304 -> {
++                val cachedStops = stopDao.getAllStops().toStops()
++                emit(LookgoResult.NotModified(cachedStops))
++            }
++
++            200 -> {
++                val stops = response.body()
++                if (stops == null || stops.data.isEmpty()) {
++                    emit(LookgoResult.Error<LookgoError>(LookgoError.EmptyList))
++                    return@flow
++                }
++                stopDao.insertAll(stops.data.map { it.toStopEntity() })
++                emit(LookgoResult.Success(stops))
+             }
+-        } catch (throwable: Throwable) {
+-            emit(LookgoResult.Error(throwable.toStopsError()))
+         }
+-    }
++    }.flowOn(Dispatchers.IO)
++        .catch { e -> emit(LookgoResult.Error(e.toStopsError())) }
++
++    private fun List<StopEntity>.toStops() = Stops(
++        data = map {
++            Stop(
++                id = it.id,
++                latitude = it.latitude,
++                longitude = it.longitude,
++                name = it.name,
++                number = it.number,
++                parkAndRide = it.parkAndRide,
++                railwayStationName = it.railwayStationName ?: "",
++                requestStop = it.requestStop,
++                updatedAt = it.updatedAt
++            )
++        }
++    )
++
++    private fun Stop.toStopEntity() =
++        StopEntity(
++            id = id,
++            latitude = latitude,
++            longitude = longitude,
++            name = name,
++            number = number,
++            parkAndRide = parkAndRide,
++            railwayStationName = railwayStationName,
++            requestStop = requestStop,
++            updatedAt = updatedAt
++        )
+ }
+Index: app/src/main/java/com/kmaslowiec/lookgo/main/view/MainScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/kmaslowiec/lookgo/main/view/MainScreen.kt b/app/src/main/java/com/kmaslowiec/lookgo/main/view/MainScreen.kt
+--- a/app/src/main/java/com/kmaslowiec/lookgo/main/view/MainScreen.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/main/java/com/kmaslowiec/lookgo/main/view/MainScreen.kt	(date 1784660124420)
+@@ -26,10 +26,10 @@
+ import com.kmaslowiec.lookgo.common.domain.LookgoError.Network
+ import com.kmaslowiec.lookgo.common.domain.LookgoError.Server
+ import com.kmaslowiec.lookgo.common.domain.LookgoError.Unknown
++import com.kmaslowiec.lookgo.common.domain.LookgoResult
+ import com.kmaslowiec.lookgo.main.view.uievent.MainUIEvent
+ import com.kmaslowiec.lookgo.main.view.uistate.MainScreenUiState
+-import com.kmaslowiec.lookgo.main.view.uistate.MainScreenUiState.Loading
+-import com.kmaslowiec.lookgo.main.view.uistate.MainScreenUiState.Success
++import com.kmaslowiec.lookgo.main.view.uistate.MainScreenUiState.*
+ import com.kmaslowiec.lookgo.main.viewmodel.MainViewModel
+ import com.kmaslowiec.lookgo.permissions.state.PermissionState
+ import com.kmaslowiec.lookgo.permissions.toRuntimePermissionRequestState
+@@ -80,8 +80,9 @@
+                 )
+                 when (val state = mainScreenUiState) {
+                     is Success -> NearBusStopsList(state.stops)
++                    is NotModified -> NearBusStopsList(state.stops)
+                     is Loading -> CircularProgressIndicator()
+-                    is MainScreenUiState.Exception -> {
++                    is Exception -> {
+                         when (state.exception) {
+                             is EmptyList -> {}
+                             is Network -> {}
+Index: app/src/main/java/com/kmaslowiec/lookgo/stops/model/Stop.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/kmaslowiec/lookgo/stops/model/Stop.kt b/app/src/main/java/com/kmaslowiec/lookgo/stops/model/Stop.kt
+--- a/app/src/main/java/com/kmaslowiec/lookgo/stops/model/Stop.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/main/java/com/kmaslowiec/lookgo/stops/model/Stop.kt	(date 1784660124486)
+@@ -11,7 +11,7 @@
+     @SerializedName("park_and_ride")
+     val parkAndRide: Boolean,
+     @SerializedName("railway_station_name")
+-    val railwayStationName: String,
++    val railwayStationName: String?,
+     @SerializedName("request_stop")
+     val requestStop: Boolean,
+     @SerializedName("updated_at")
+Index: app/src/main/java/com/kmaslowiec/lookgo/common/domain/LookgoResult.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/kmaslowiec/lookgo/common/domain/LookgoResult.kt b/app/src/main/java/com/kmaslowiec/lookgo/common/domain/LookgoResult.kt
+--- a/app/src/main/java/com/kmaslowiec/lookgo/common/domain/LookgoResult.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/main/java/com/kmaslowiec/lookgo/common/domain/LookgoResult.kt	(date 1784660124412)
+@@ -2,6 +2,6 @@
+ 
+ sealed interface LookgoResult<out T, out E> {
+     data class Success<T>(val value: T) : LookgoResult<T, Nothing>
+-    data object NotModified : LookgoResult<Nothing, Nothing>
++    data class NotModified<T>(val value: T) : LookgoResult<T, Nothing>
+     data class Error<E>(val exception: E) : LookgoResult<Nothing, E>
+ }
+Index: app/src/main/java/com/kmaslowiec/lookgo/persistence/AppDatabase.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/kmaslowiec/lookgo/persistence/AppDatabase.kt b/app/src/main/java/com/kmaslowiec/lookgo/persistence/AppDatabase.kt
+--- a/app/src/main/java/com/kmaslowiec/lookgo/persistence/AppDatabase.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/main/java/com/kmaslowiec/lookgo/persistence/AppDatabase.kt	(date 1784660124482)
+@@ -2,6 +2,8 @@
+ 
+ import androidx.room.Database
+ import androidx.room.RoomDatabase
++import com.kmaslowiec.lookgo.persistence.stop.StopDao
++import com.kmaslowiec.lookgo.persistence.stop.StopEntity
+ 
+ @Database(entities = [StopEntity::class], version = 1)
+ abstract class AppDatabase : RoomDatabase() {
+Index: app/src/androidTest/java/com/kmaslowiec/lookgo/persistence/AppDatabaseTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/androidTest/java/com/kmaslowiec/lookgo/persistence/AppDatabaseTest.kt b/app/src/androidTest/java/com/kmaslowiec/lookgo/persistence/AppDatabaseTest.kt
+--- a/app/src/androidTest/java/com/kmaslowiec/lookgo/persistence/AppDatabaseTest.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/androidTest/java/com/kmaslowiec/lookgo/persistence/AppDatabaseTest.kt	(date 1784660124406)
+@@ -4,6 +4,8 @@
+ import androidx.room.Room
+ import androidx.test.core.app.ApplicationProvider
+ import androidx.test.ext.junit.runners.AndroidJUnit4
++import com.kmaslowiec.lookgo.persistence.stop.StopDao
++import com.kmaslowiec.lookgo.persistence.stop.StopEntity
+ import junit.framework.TestCase.assertEquals
+ import junit.framework.TestCase.assertTrue
+ import kotlinx.coroutines.test.runTest
+Index: app/src/main/java/com/kmaslowiec/lookgo/main/view/uistate/MainScreenUiState.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/kmaslowiec/lookgo/main/view/uistate/MainScreenUiState.kt b/app/src/main/java/com/kmaslowiec/lookgo/main/view/uistate/MainScreenUiState.kt
+--- a/app/src/main/java/com/kmaslowiec/lookgo/main/view/uistate/MainScreenUiState.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/main/java/com/kmaslowiec/lookgo/main/view/uistate/MainScreenUiState.kt	(date 1784660124416)
+@@ -5,6 +5,7 @@
+ 
+ sealed class MainScreenUiState {
+     data class Success(val stops: List<Stop>) : MainScreenUiState()
++    data class NotModified(val stops: List<Stop>) : MainScreenUiState()
+     data object Loading : MainScreenUiState()
+     data class Exception(val exception: LookgoError) : MainScreenUiState()
+ }
+Index: app/src/main/java/com/kmaslowiec/lookgo/common/di/persistence/DatabaseModule.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/kmaslowiec/lookgo/common/di/persistence/DatabaseModule.kt b/app/src/main/java/com/kmaslowiec/lookgo/common/di/persistence/DatabaseModule.kt
+--- a/app/src/main/java/com/kmaslowiec/lookgo/common/di/persistence/DatabaseModule.kt	(revision 6b6193c93937d32465435f62668119e8ed5ddba3)
++++ b/app/src/main/java/com/kmaslowiec/lookgo/common/di/persistence/DatabaseModule.kt	(date 1784660124410)
+@@ -3,7 +3,7 @@
+ import android.content.Context
+ import androidx.room.Room
+ import com.kmaslowiec.lookgo.persistence.AppDatabase
+-import com.kmaslowiec.lookgo.persistence.StopDao
++import com.kmaslowiec.lookgo.persistence.stop.StopDao
+ import dagger.Module
+ import dagger.Provides
+ import dagger.hilt.InstallIn
